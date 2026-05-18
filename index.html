@@ -6044,6 +6044,23 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--ink);
 }
 .lv-compact-expand svg { width: 16px; height: 16px; }
+.lv-compact-retry {
+  background: var(--olive);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: #FFF8EE;
+  margin-right: 2px;
+}
+.lv-compact-retry:active { transform: scale(0.9); }
+.lv-compact-retry svg { width: 16px; height: 16px; }
+.live-view-result-v82.searching .lv-compact-retry { opacity: 0.4; pointer-events: none; }
 .live-view-result-v82.expanded .lv-compact-expand { transform: rotate(180deg); }
 .live-view-result-v82.expanded .lv-compact { display: none; }
 .lv-detail-close {
@@ -6706,11 +6723,17 @@ button.map-nav-overlay svg {
       <div class="lv-compact" id="lv-compact">
         <div class="lv-compact-eyebrow">TU VOIS</div>
         <div class="lv-compact-body">
-          <div class="lv-compact-title" id="live-view-poi-name">…</div>
+          <div class="lv-compact-title" id="live-view-poi-name">Pointe quelque chose</div>
           <div class="lv-compact-address" id="lv-compact-address" style="display:none;">
             <span class="lv-pin">📍</span><span id="lv-compact-address-text"></span>
           </div>
         </div>
+        <button class="lv-compact-retry" id="lv-compact-retry-btn" aria-label="Refaire l'analyse" title="Refaire l'analyse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+          </svg>
+        </button>
         <button class="lv-compact-expand" id="lv-compact-expand-btn" aria-label="Voir le détail">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
@@ -13297,15 +13320,29 @@ async function reverseGeocode(lat, lng) {
 }
 
 // V82 : Helper pour mettre à jour compact + détail en même temps
+// V85 : Robuste — jamais de texte vide
 function setLiveViewState({ eyebrow, title, meta, address, searching, hasGps }) {
   const result = document.getElementById('live-view-result');
-  if (!result) return;
+  if (!result) {
+    console.warn('[setLiveViewState] result element not found');
+    return;
+  }
+
+  // Fallback titre — NE JAMAIS être vide
+  let safeTitle = (title && String(title).trim()) ? String(title).trim() : '';
+  if (!safeTitle) {
+    safeTitle = searching ? 'Analyse en cours…' : 'Pointe quelque chose';
+  }
+
+  console.log('[setLiveViewState]', { safeTitle, searching, hasGps, addr: address?.short });
 
   // Compact
   const compactTitle = document.getElementById('live-view-poi-name');
   const compactAddrWrap = document.getElementById('lv-compact-address');
   const compactAddrText = document.getElementById('lv-compact-address-text');
-  if (compactTitle) compactTitle.textContent = title || '…';
+  if (compactTitle) {
+    compactTitle.textContent = safeTitle;
+  }
   if (address && address.short && compactAddrWrap && compactAddrText) {
     compactAddrText.textContent = address.short;
     compactAddrWrap.style.display = '';
@@ -13638,42 +13675,14 @@ function onLiveViewPositionUpdate(position) {
 }
 
 function onLiveViewPositionError(err) {
-  console.error('Geoloc error:', err);
-  updateLiveViewStatus(null, null, null, 'GPS indisponible');
+  console.error('Geoloc watch error:', err);
+  // V85 : NE PAS toucher au bandeau résultat — l'analyse Vision gère son propre état GPS
 }
 
 function updateLiveViewStatus(poi, idx, distance, fallbackMsg) {
-  const result = document.getElementById('live-view-result');
-  const eyebrow = document.getElementById('live-view-result-eyebrow');
-  const nameEl = document.getElementById('live-view-poi-name');
-  const metaEl = document.getElementById('live-view-poi-meta');
-  const detailBtn = document.getElementById('live-view-detail-btn');
-  if (!result) return;
-
-  result.classList.add('show');
-
-  if (!poi) {
-    result.classList.add('searching');
-    eyebrow.textContent = 'En attente';
-    nameEl.textContent = fallbackMsg || 'Cherche autour de toi…';
-    metaEl.textContent = '';
-    return;
-  }
-
-  result.classList.remove('searching');
-  eyebrow.textContent = 'Tu vois sans doute';
-  const letter = poiLetter(idx);
-  nameEl.textContent = `${letter} · ${poi.nom}`;
-  let metaText = `${Math.round(distance)} m`;
-  if (distance < VECU_PROXIMITY_M) {
-    metaText += ' · tu y es';
-  } else if (distance < 300) {
-    metaText += ' · juste à côté';
-  } else if (distance < 1000) {
-    metaText += ` · ${(distance/1000).toFixed(1)} km`;
-  }
-  if (poi.vecu) metaText += ' · ✓ visité';
-  metaEl.textContent = metaText;
+  // V85 : Fonction neutralisée — ne touche plus au bandeau résultat
+  // Le bandeau est géré exclusivement par setLiveViewState via runClaudeVisionAnalysis
+  return;
 }
 
 // V74 : Écran d'erreur caméra (au lieu de fermer brutalement)
@@ -13832,6 +13841,15 @@ document.getElementById('lv-compact').addEventListener('click', (e) => {
 document.getElementById('lv-compact-expand-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   toggleLiveViewExpand();
+});
+
+// V85 : Bouton "Refaire l'analyse" toujours visible dans le compact
+document.getElementById('lv-compact-retry-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!liveViewActive) return;
+  if (navigator.vibrate) navigator.vibrate(10);
+  const { voyActive, etapeActive } = getActiveVoyageContext();
+  runClaudeVisionAnalysis(voyActive, etapeActive);
 });
 
 // V82 : Tap sur le backdrop (caméra) → replie le panneau si déplié
