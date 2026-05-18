@@ -6716,8 +6716,8 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
-    <!-- V86 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v86</div>
+    <!-- V87 : Badge version pour vérifier le déploiement -->
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v87</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -6805,10 +6805,7 @@ button.map-nav-overlay svg {
       </button>
     </div>
 
-    <!-- Mini-carte repliable (bas) - n'apparaît que si POI dispo -->
-    <div class="live-view-mini-map" id="live-view-mini-map-wrap">
-      <div class="voyage-map" id="live-view-map"></div>
-    </div>
+    <!-- V87 : Ancienne mini-map résiduelle supprimée (bloquait les taps !) -->
   </div>
 </div>
 
@@ -13191,24 +13188,8 @@ async function openEyeView() {
     return;
   }
 
-  // 5. Mini-carte (si voyage en cours et POIs dispos)
-  const miniMapWrap = document.getElementById('live-view-mini-map-wrap');
-  if (etapeActive && etapeActive.lat && etapeActive.lng && liveViewNearbyPois.length > 0) {
-    const markers = [{
-      lat: etapeActive.lat, lng: etapeActive.lng, today: true, label: ''
-    }];
-    liveViewNearbyPois.forEach((p, idx) => {
-      markers.push({ lat: p.lat, lng: p.lng, poi: true, label: poiLetter(idx) });
-    });
-    pendingMapInits.push({
-      elId: 'live-view-map', markers, mode: 'day',
-      voyageId: liveViewVoyageId, dayNum: liveViewDayNum, etape: etapeActive
-    });
-    setTimeout(initPendingMaps, 250);
-    setTimeout(() => miniMapWrap.classList.add('show'), 600);
-  } else {
-    miniMapWrap.classList.remove('show');
-  }
+  // 5. V87 : Ancienne mini-carte legacy supprimée — Leaflet est maintenant dans le bandeau résultat
+  // (plus de référence à live-view-mini-map-wrap qui bloquait les taps)
 
   // 6. Tracking GPS — pour savoir QUEL POI est proche (pas pour marquer auto)
   // V48 : plus de marquage auto au bout de 30s. Le marquage est consenti via le bouton capture.
@@ -13712,9 +13693,8 @@ function updateLiveViewStatus(poi, idx, distance, fallbackMsg) {
 // V74 : Écran d'erreur caméra (au lieu de fermer brutalement)
 function showCameraError(err) {
   const result = document.getElementById('live-view-result');
-  const miniMap = document.getElementById('live-view-mini-map-wrap');
   if (result) result.classList.remove('show');
-  if (miniMap) miniMap.classList.remove('show');
+  // V87 : ancienne mini-map legacy supprimée
 
   let title = 'Caméra non accessible';
   let detail = '';
