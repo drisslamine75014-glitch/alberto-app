@@ -6096,12 +6096,12 @@ button { font-family: inherit; cursor: pointer; }
   padding-bottom: 0;
 }
 .live-view-result-v82.expanded .lv-detail {
-  max-height: calc(100vh - 380px);
+  max-height: calc(100vh - 280px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   opacity: 1;
   transform: scaleY(1);
-  padding: 16px 20px 20px;
+  padding: 16px 20px 16px;
 }
 
 /* Backdrop pour fermer l'expand au tap caméra */
@@ -6156,38 +6156,7 @@ button { font-family: inherit; cursor: pointer; }
   color: #C9603A;
   font-style: italic;
 }
-.live-view-detail-inline {
-  background: var(--ink);
-  color: #FFF8EE;
-  border: none;
-  border-radius: 99px;
-  padding: 9px 16px;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.live-view-detail-inline:active { transform: scale(0.96); }
-.live-view-detail-inline.secondary {
-  background: transparent;
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-}
-.live-view-detail-inline.secondary:active {
-  background: var(--bg-warm);
-}
-.live-view-result-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-.live-view-result-actions .live-view-detail-inline {
-  flex: 1;
-}
+/* V89 : CSS des boutons détail supprimé — plus de boutons dans le panneau détail */
 
 /* Mini-map intégrée */
 .live-view-minimap-wrap {
@@ -6703,8 +6672,8 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
-    <!-- V88 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v88</div>
+    <!-- V89 : Badge version pour vérifier le déploiement -->
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v89</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -6752,18 +6721,7 @@ button.map-nav-overlay svg {
             </svg>
           </button>
         </div>
-        <div class="live-view-result-actions">
-          <button class="live-view-detail-inline secondary" id="live-view-retry-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px;">
-              <polyline points="23 4 23 10 17 10"/>
-              <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-            </svg>
-            Refaire l'analyse
-          </button>
-          <button class="live-view-detail-inline" id="live-view-detail-btn">
-            Voir sur la carte →
-          </button>
-        </div>
+        <!-- V89 : Boutons d'action supprimés — redondants avec le compact (↻) et le pictogramme expand (⤢) -->
       </div>
     </div>
 
@@ -13357,10 +13315,7 @@ function setLiveViewState({ eyebrow, title, meta, address, searching, hasGps }) 
     result.classList.remove('searching');
   }
   result.classList.add('show');
-
-  // Bouton "Voir sur la carte" — visible si GPS
-  const detailBtn = document.getElementById('live-view-detail-btn');
-  if (detailBtn) detailBtn.style.display = hasGps ? '' : 'none';
+  // V89 : plus de bouton "Voir sur la carte" — le pictogramme ⤢ sur la mini-map fait le job
 }
 
 async function runClaudeVisionAnalysis(voyActive, etapeActive) {
@@ -13785,21 +13740,8 @@ function getActiveVoyageContext() {
   return { voyActive, etapeActive };
 }
 
-// V81 : Bouton "Voir sur la carte" → ouvre Google Maps
-document.getElementById('live-view-detail-btn').addEventListener('click', () => {
-  if (!liveViewActive) return;
-  if (liveViewLastGps) {
-    openGoogleMapsAtPosition();
-  }
-});
-
-// V81 : Bouton "Refaire l'analyse" → relance Claude Vision
-document.getElementById('live-view-retry-btn').addEventListener('click', () => {
-  if (!liveViewActive) return;
-  if (navigator.vibrate) navigator.vibrate(10);
-  const { voyActive, etapeActive } = getActiveVoyageContext();
-  runClaudeVisionAnalysis(voyActive, etapeActive);
-});
+// V89 : Anciens boutons supprimés (detail-btn et retry-btn).
+// Le bouton ↻ olive du compact gère le retry, et le ⤢ sur la mini-map ouvre Google Maps.
 
 // V81 : Bouton expand sur la mini-map → ouvre Google Maps plein écran
 document.getElementById('live-view-minimap-expand').addEventListener('click', (e) => {
