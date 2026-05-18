@@ -12853,6 +12853,9 @@ async function openEyeView() {
   liveViewActive = true;
   liveViewCurrentPoi = null;
   liveViewCloseStartTime = null;
+  // V79 : reset promise GPS (sera relancée plus bas dans le user gesture)
+  liveViewGpsPromise = null;
+  liveViewLastGps = null;
 
   // 1. Détecter voyage en cours (PENDANT) — date du jour entre date et endDate
   const todayIso = TODAY.toISOString().slice(0,10);
@@ -12897,6 +12900,14 @@ async function openEyeView() {
   // Show result panel after small delay
   setTimeout(() => result.classList.add('show'), 250);
 
+  // V79 : LANCER LA DEMANDE GPS DÈS MAINTENANT — dans le contexte du user gesture (tap sur "Que vois-je?")
+  // Sinon Chrome refuse silencieusement la demande plus tard dans la chaîne async.
+  // On stocke la Promise dans une variable globale ; runClaudeVisionAnalysis l'utilisera.
+  liveViewGpsPromise = getCurrentPositionPromise().catch(err => {
+    console.warn('GPS error caught early:', err.message);
+    return { error: err.message };
+  });
+
   // 4. Démarrer la caméra
   const video = document.getElementById('live-view-video');
   try {
@@ -12907,8 +12918,6 @@ async function openEyeView() {
     video.srcObject = liveViewStream;
   } catch (err) {
     console.error('Camera access denied:', err);
-    // V74 : NE PLUS fermer brutalement après 1.5s — afficher un vrai écran d'erreur
-    // dans la live view, l'utilisateur ferme lui-même quand il a compris
     showCameraError(err);
     return;
   }
@@ -13049,11 +13058,18 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
     return;
   }
 
-  // 2. GPS — V78 : demande explicite + gestion d'erreur claire
+  // 2. GPS — V79 : on utilise la Promise pré-lancée dans openEyeView (user gesture)
+  // Si elle n'existe pas (cas du "Refaire l'analyse"), on en lance une nouvelle (peut échouer sur Chrome)
   let gps = null;
   let gpsError = null;
   try {
-    gps = await getCurrentPositionPromise();
+    const promiseToUse = liveViewGpsPromise || getCurrentPositionPromise();
+    const gpsResult = await promiseToUse;
+    if (gpsResult && gpsResult.error) {
+      gpsError = gpsResult.error;
+    } else if (gpsResult && gpsResult.lat) {
+      gps = gpsResult;
+    }
   } catch (err) {
     gpsError = err.message;
     console.warn('GPS unavailable:', err.message);
@@ -13187,6 +13203,8 @@ ${contextLines.join('\n')}`;
 // V78 : Stockage analyse + GPS pour réutilisation (swipe vers map)
 let liveViewLastAnalysis = null;
 let liveViewLastGps = null;
+// V79 : Promise GPS lancée dès l'ouverture (pour rester dans le user gesture)
+let liveViewGpsPromise = null;
 
 // V78 : Ouvre Google Maps centré sur la position courante
 function openGoogleMapsAtPosition() {
