@@ -6015,18 +6015,74 @@ button { font-family: inherit; cursor: pointer; }
   color: #FFF8EE;
   border: none;
   border-radius: 99px;
-  padding: 8px 18px;
+  padding: 9px 16px;
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 12px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 .live-view-detail-inline:active { transform: scale(0.96); }
+.live-view-detail-inline.secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.live-view-detail-inline.secondary:active {
+  background: var(--bg-warm);
+}
+.live-view-result-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.live-view-result-actions .live-view-detail-inline {
+  flex: 1;
+}
+
+/* V81 : Mini-map intégrée OSM Leaflet */
+.live-view-minimap-wrap {
+  position: relative;
+  margin: 10px 0 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 140px;
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+}
+.live-view-minimap {
+  width: 100%;
+  height: 100%;
+}
+.live-view-minimap-expand {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 248, 238, 0.95);
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.live-view-minimap-expand:active { transform: scale(0.92); }
+.live-view-minimap-expand svg { width: 14px; height: 14px; }
+
 .live-view-result.searching .live-view-result-name {
   font-size: 17px;
   color: var(--ink-3);
 }
-.live-view-result.searching .live-view-detail-inline {
+.live-view-result.searching .live-view-result-actions,
+.live-view-result.searching .live-view-minimap-wrap {
   display: none;
 }
 
@@ -6514,9 +6570,30 @@ button.map-nav-overlay svg {
       <div class="live-view-result-eyebrow" id="live-view-result-eyebrow">Tu vois sans doute</div>
       <div class="live-view-result-name" id="live-view-poi-name">…</div>
       <div class="live-view-result-meta" id="live-view-poi-meta">Cherche autour de toi…</div>
-      <button class="live-view-detail-inline" id="live-view-detail-btn">
-        Refaire l'analyse →
-      </button>
+      <!-- V81 : Mini-map intégrée (OSM Leaflet) — apparaît si GPS dispo -->
+      <div class="live-view-minimap-wrap" id="live-view-minimap-wrap" style="display:none;">
+        <div class="live-view-minimap" id="live-view-minimap"></div>
+        <button class="live-view-minimap-expand" id="live-view-minimap-expand" aria-label="Ouvrir dans Maps">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </button>
+      </div>
+      <div class="live-view-result-actions">
+        <button class="live-view-detail-inline secondary" id="live-view-retry-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px;">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+          </svg>
+          Refaire l'analyse
+        </button>
+        <button class="live-view-detail-inline" id="live-view-detail-btn">
+          Voir sur la carte →
+        </button>
+      </div>
     </div>
 
     <!-- Bouton capture central (œil) -->
@@ -12947,7 +13024,7 @@ async function openEyeView() {
     liveViewGeoWatchId = navigator.geolocation.watchPosition(
       onLiveViewPositionUpdate,
       onLiveViewPositionError,
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
     );
   }
 
@@ -12978,29 +13055,51 @@ function captureVideoFrameBase64() {
   return dataUrl.split(',')[1] || null;
 }
 
-// V78 : GPS amélioré — demande la permission explicitement et propage l'erreur
+// V80 : GPS robuste — stratégie 2 niveaux
+// 1) D'abord position rapide via Wi-Fi/cellulaire (low accuracy, max 5min)
+// 2) Si timeout, fallback sur high accuracy avec timeout plus long
 function getCurrentPositionPromise() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('GPS non supporté par ce navigateur'));
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({
+
+    let resolved = false;
+    const finish = (pos) => {
+      if (resolved) return;
+      resolved = true;
+      resolve({
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
         accuracy: pos.coords.accuracy
-      }),
-      (err) => {
-        // err.code : 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
-        const messages = {
-          1: 'Permission GPS refusée. Va dans les réglages du site pour autoriser.',
-          2: 'Position introuvable. Active la localisation de ton téléphone.',
-          3: 'GPS trop lent à répondre.'
-        };
-        reject(new Error(messages[err.code] || err.message || 'GPS erreur'));
+      });
+    };
+
+    const onError = (err) => {
+      if (resolved) return;
+      resolved = true;
+      const messages = {
+        1: 'Permission GPS refusée. Va dans les réglages du site pour autoriser.',
+        2: 'Position introuvable. Active la localisation de ton téléphone.',
+        3: 'GPS trop lent à répondre.'
+      };
+      reject(new Error(messages[err.code] || err.message || 'GPS erreur'));
+    };
+
+    // Tentative 1 : position rapide (Wi-Fi/cell, accepte cache de 5min)
+    navigator.geolocation.getCurrentPosition(
+      finish,
+      () => {
+        // Tentative 2 : haute précision, timeout long
+        if (resolved) return;
+        navigator.geolocation.getCurrentPosition(
+          finish,
+          onError,
+          { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+        );
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
     );
   });
 }
@@ -13180,15 +13279,18 @@ ${contextLines.join('\n')}`;
       resultMeta.textContent = parsed.context || '';
     }
 
-    // V78 : Si on a une position, propose le bouton "Voir sur la carte"
-    if (detailBtn) {
-      if (gps) {
-        detailBtn.innerHTML = 'Voir sur la carte →';
-        detailBtn.dataset.mapMode = 'open-map';
-      } else {
-        detailBtn.innerHTML = 'Refaire l\'analyse →';
-        detailBtn.dataset.mapMode = 'retry';
-      }
+    // V81 : Affiche le bouton "Voir sur la carte" SEULEMENT si GPS dispo
+    // Le bouton "Refaire l'analyse" est TOUJOURS visible.
+    const detailBtn81 = document.getElementById('live-view-detail-btn');
+    if (detailBtn81) {
+      detailBtn81.style.display = gps ? '' : 'none';
+    }
+
+    // V81 : Mini-map intégrée si GPS dispo
+    if (gps) {
+      initLiveViewMiniMap(gps.lat, gps.lng);
+    } else {
+      hideLiveViewMiniMap();
     }
 
     liveViewLastAnalysis = { ...parsed, address, gps };
@@ -13207,6 +13309,69 @@ let liveViewLastGps = null;
 let liveViewGpsPromise = null;
 
 // V78 : Ouvre Google Maps centré sur la position courante
+// V81 : Mini-map Leaflet intégrée dans le bandeau résultat
+let liveViewMiniMap = null;
+let liveViewMiniMapMarker = null;
+
+function initLiveViewMiniMap(lat, lng) {
+  const wrap = document.getElementById('live-view-minimap-wrap');
+  const mapEl = document.getElementById('live-view-minimap');
+  if (!wrap || !mapEl) return;
+
+  // Affiche le wrapper
+  wrap.style.display = 'block';
+
+  // Reset si déjà initialisée
+  if (liveViewMiniMap) {
+    try { liveViewMiniMap.remove(); } catch (e) {}
+    liveViewMiniMap = null;
+    liveViewMiniMapMarker = null;
+    mapEl.innerHTML = '';
+  }
+
+  try {
+    liveViewMiniMap = L.map(mapEl, {
+      zoomControl: false,
+      attributionControl: false,
+      scrollWheelZoom: false,
+      dragging: true,
+      tap: true
+    }).setView([lat, lng], 16);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(liveViewMiniMap);
+
+    // Marqueur "tu es ici" — cercle doré
+    liveViewMiniMapMarker = L.circleMarker([lat, lng], {
+      radius: 9,
+      fillColor: '#C77D3C',
+      color: '#FFF8EE',
+      weight: 3,
+      fillOpacity: 1
+    }).addTo(liveViewMiniMap);
+
+    // Force le refresh après l'animation d'apparition
+    setTimeout(() => {
+      if (liveViewMiniMap) liveViewMiniMap.invalidateSize();
+    }, 350);
+  } catch (err) {
+    console.error('Mini-map init error:', err);
+    wrap.style.display = 'none';
+  }
+}
+
+function hideLiveViewMiniMap() {
+  const wrap = document.getElementById('live-view-minimap-wrap');
+  if (wrap) wrap.style.display = 'none';
+  if (liveViewMiniMap) {
+    try { liveViewMiniMap.remove(); } catch (e) {}
+    liveViewMiniMap = null;
+    liveViewMiniMapMarker = null;
+  }
+}
+
 function openGoogleMapsAtPosition() {
   if (!liveViewLastGps) {
     showToast('Position GPS non disponible');
@@ -13347,6 +13512,9 @@ function closeLiveView() {
   const liveView = document.getElementById('live-view');
   liveView.classList.remove('open');
 
+  // V81 : Détruit la mini-map pour libérer les ressources
+  hideLiveViewMiniMap();
+
   // V74 : retirer écran d'erreur si présent
   const errOverlay = document.getElementById('live-view-error-overlay');
   if (errOverlay) errOverlay.remove();
@@ -13377,15 +13545,8 @@ function closeLiveView() {
 
 // Listeners live view V47
 document.getElementById('live-view-close').addEventListener('click', closeLiveView);
-document.getElementById('live-view-detail-btn').addEventListener('click', (e) => {
-  if (!liveViewActive) return;
-  const btn = e.currentTarget;
-  // V78 : si on a une position GPS, le bouton ouvre Google Maps
-  if (btn.dataset.mapMode === 'open-map' && liveViewLastGps) {
-    openGoogleMapsAtPosition();
-    return;
-  }
-  // Sinon : relance l'analyse Claude Vision
+// V81 : Helper pour retrouver le voyage actif (utilisé par les 2 boutons)
+function getActiveVoyageContext() {
   const todayIso = TODAY.toISOString().slice(0,10);
   let voyActive = null, etapeActive = null;
   for (const m of MOMENTS) {
@@ -13398,37 +13559,29 @@ document.getElementById('live-view-detail-btn').addEventListener('click', (e) =>
       break;
     }
   }
+  return { voyActive, etapeActive };
+}
+
+// V81 : Bouton "Voir sur la carte" → ouvre Google Maps
+document.getElementById('live-view-detail-btn').addEventListener('click', () => {
+  if (!liveViewActive) return;
+  if (liveViewLastGps) {
+    openGoogleMapsAtPosition();
+  }
+});
+
+// V81 : Bouton "Refaire l'analyse" → relance Claude Vision
+document.getElementById('live-view-retry-btn').addEventListener('click', () => {
+  if (!liveViewActive) return;
+  if (navigator.vibrate) navigator.vibrate(10);
+  const { voyActive, etapeActive } = getActiveVoyageContext();
   runClaudeVisionAnalysis(voyActive, etapeActive);
 });
 
-// V78 : Long press sur le bouton "Voir sur la carte" → relance l'analyse au lieu
-let detailBtnPressTimer = null;
-const detailBtn78 = document.getElementById('live-view-detail-btn');
-detailBtn78.addEventListener('touchstart', () => {
-  detailBtnPressTimer = setTimeout(() => {
-    detailBtnPressTimer = null;
-    // Force relance analyse
-    const todayIso = TODAY.toISOString().slice(0,10);
-    let voyActive = null, etapeActive = null;
-    for (const m of MOMENTS) {
-      if (m.type !== 'voyage') continue;
-      if (!m.date) continue;
-      const end = m.endDate || m.date;
-      if (m.date <= todayIso && todayIso <= end) {
-        voyActive = m;
-        etapeActive = (m.etapes || []).find(e => e.date === todayIso);
-        break;
-      }
-    }
-    runClaudeVisionAnalysis(voyActive, etapeActive);
-    if (navigator.vibrate) navigator.vibrate(15);
-  }, 700);
-});
-detailBtn78.addEventListener('touchend', () => {
-  if (detailBtnPressTimer) { clearTimeout(detailBtnPressTimer); detailBtnPressTimer = null; }
-});
-detailBtn78.addEventListener('touchcancel', () => {
-  if (detailBtnPressTimer) { clearTimeout(detailBtnPressTimer); detailBtnPressTimer = null; }
+// V81 : Bouton expand sur la mini-map → ouvre Google Maps plein écran
+document.getElementById('live-view-minimap-expand').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openGoogleMapsAtPosition();
 });
 
 // V47 : Voix depuis la live view → fermer la caméra et ouvrir sheet voix
