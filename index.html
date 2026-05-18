@@ -5952,23 +5952,16 @@ button { font-family: inherit; cursor: pointer; }
   top: calc(70px + var(--safe-top));
   left: 16px;
   right: 16px;
-  bottom: calc(160px + var(--safe-bottom));
   z-index: 8;
   pointer-events: none;
   opacity: 0;
   transform: translateY(-12px);
   transition: opacity 0.3s, transform 0.3s;
-  display: flex;
-  flex-direction: column;
 }
 .live-view-result-v82.show {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-}
-/* En mode collapsed : le container ne prend que la place du compact */
-.live-view-result-v82:not(.expanded) {
-  bottom: auto;
 }
 
 /* Bandeau COMPACT (1 ligne en haut) */
@@ -6103,8 +6096,7 @@ button { font-family: inherit; cursor: pointer; }
   padding-bottom: 0;
 }
 .live-view-result-v82.expanded .lv-detail {
-  flex: 1;
-  min-height: 0;
+  max-height: calc(100vh - 380px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   opacity: 1;
@@ -6192,11 +6184,6 @@ button { font-family: inherit; cursor: pointer; }
   display: flex;
   gap: 8px;
   margin-top: 12px;
-  position: sticky;
-  bottom: -4px;
-  background: rgba(255, 248, 238, 0.96);
-  padding: 8px 0 4px;
-  z-index: 5;
 }
 .live-view-result-actions .live-view-detail-inline {
   flex: 1;
@@ -6716,8 +6703,8 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
-    <!-- V87 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v87</div>
+    <!-- V88 : Badge version pour vérifier le déploiement -->
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v88</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
