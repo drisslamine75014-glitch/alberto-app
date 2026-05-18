@@ -5944,31 +5944,139 @@ button { font-family: inherit; cursor: pointer; }
 }
 .lve-btn:active { transform: scale(0.96); }
 
-.live-view-result {
+/* V82 : Bandeau résultat — Mode compact par défaut + panneau expand */
+
+/* Conteneur global */
+.live-view-result-v82 {
   position: absolute;
-  bottom: 200px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: calc(100% - 32px);
-  min-width: 280px;
-  background: rgba(255,248,238,0.96);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-radius: 20px;
-  padding: 16px 24px 18px;
-  text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.55);
+  top: calc(70px + var(--safe-top));
+  left: 16px;
+  right: 16px;
   z-index: 8;
-  opacity: 0;
-  transform: translateX(-50%) translateY(20px);
-  transition: opacity 0.3s, transform 0.3s;
   pointer-events: none;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.3s, transform 0.3s;
 }
-.live-view-result.show {
+.live-view-result-v82.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
   pointer-events: auto;
 }
+
+/* Bandeau COMPACT (1 ligne en haut) */
+.lv-compact {
+  background: rgba(255, 248, 238, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  padding: 10px 12px 10px 16px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  min-height: 56px;
+  transition: opacity 0.2s;
+}
+.lv-compact:active { opacity: 0.85; }
+.lv-compact-eyebrow {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--olive-deep);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  border-right: 1px solid var(--line);
+  padding-right: 8px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+.lv-compact-body {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.lv-compact-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lv-compact-address {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--olive-deep);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lv-pin { margin-right: 3px; }
+.lv-compact-expand {
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.3s;
+  color: var(--ink);
+}
+.lv-compact-expand svg { width: 16px; height: 16px; }
+.live-view-result-v82.expanded .lv-compact-expand { transform: rotate(180deg); }
+
+/* Panneau DÉTAIL (masqué par défaut) */
+.lv-detail {
+  background: rgba(255, 248, 238, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 18px;
+  padding: 16px 20px;
+  margin-top: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  text-align: center;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: scaleY(0.95);
+  transform-origin: top center;
+  transition: max-height 0.3s ease, opacity 0.25s, transform 0.3s, padding 0.3s, margin-top 0.3s;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.live-view-result-v82.expanded .lv-detail {
+  max-height: 480px;
+  opacity: 1;
+  transform: scaleY(1);
+  padding: 16px 20px;
+}
+
+/* Backdrop pour fermer l'expand au tap caméra */
+.lv-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: none;
+}
+.live-view-result-v82.expanded ~ .lv-backdrop {
+  display: block;
+}
+
+/* Styles partagés détail */
 .live-view-result-eyebrow {
   font-family: 'Outfit', sans-serif;
   font-size: 10.5px;
@@ -5981,11 +6089,11 @@ button { font-family: inherit; cursor: pointer; }
 .live-view-result-name {
   font-family: 'Fraunces', serif;
   font-style: italic;
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--ink);
+  font-size: 22px;
+  font-weight: 600;
   line-height: 1.15;
-  margin-bottom: 4px;
+  color: var(--ink);
+  margin-bottom: 8px;
 }
 .live-view-result-meta {
   font-family: 'Outfit', sans-serif;
@@ -6001,7 +6109,6 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 12px;
   color: var(--olive-deep);
   font-weight: 600;
-  letter-spacing: 0.01em;
 }
 .lv-address-error {
   display: inline-block;
@@ -6037,26 +6144,23 @@ button { font-family: inherit; cursor: pointer; }
 .live-view-result-actions {
   display: flex;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 .live-view-result-actions .live-view-detail-inline {
   flex: 1;
 }
 
-/* V81 : Mini-map intégrée OSM Leaflet */
+/* Mini-map intégrée */
 .live-view-minimap-wrap {
   position: relative;
-  margin: 10px 0 12px;
+  margin: 10px 0 4px;
   border-radius: 12px;
   overflow: hidden;
-  height: 140px;
+  height: 160px;
   background: var(--bg-warm);
   border: 1px solid var(--line);
 }
-.live-view-minimap {
-  width: 100%;
-  height: 100%;
-}
+.live-view-minimap { width: 100%; height: 100%; }
 .live-view-minimap-expand {
   position: absolute;
   top: 8px;
@@ -6077,14 +6181,9 @@ button { font-family: inherit; cursor: pointer; }
 .live-view-minimap-expand:active { transform: scale(0.92); }
 .live-view-minimap-expand svg { width: 14px; height: 14px; }
 
-.live-view-result.searching .live-view-result-name {
-  font-size: 17px;
-  color: var(--ink-3);
-}
-.live-view-result.searching .live-view-result-actions,
-.live-view-result.searching .live-view-minimap-wrap {
-  display: none;
-}
+/* État searching : cache détail et adresse */
+.live-view-result-v82.searching .lv-compact-address { display: none !important; }
+.live-view-result-v82.searching .lv-compact-expand { opacity: 0.3; pointer-events: none; }
 
 /* Bottom bar : voix + capture (œil) + écrire */
 .live-view-bottom {
@@ -6565,36 +6664,58 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
-    <!-- Bandeau résultat Alberto -->
-    <div class="live-view-result" id="live-view-result">
-      <div class="live-view-result-eyebrow" id="live-view-result-eyebrow">Tu vois sans doute</div>
-      <div class="live-view-result-name" id="live-view-poi-name">…</div>
-      <div class="live-view-result-meta" id="live-view-poi-meta">Cherche autour de toi…</div>
-      <!-- V81 : Mini-map intégrée (OSM Leaflet) — apparaît si GPS dispo -->
-      <div class="live-view-minimap-wrap" id="live-view-minimap-wrap" style="display:none;">
-        <div class="live-view-minimap" id="live-view-minimap"></div>
-        <button class="live-view-minimap-expand" id="live-view-minimap-expand" aria-label="Ouvrir dans Maps">
+    <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
+    <div class="live-view-result-v82" id="live-view-result">
+
+      <!-- Bandeau compact (toujours visible après analyse) -->
+      <div class="lv-compact" id="lv-compact">
+        <div class="lv-compact-eyebrow">TU VOIS</div>
+        <div class="lv-compact-body">
+          <div class="lv-compact-title" id="live-view-poi-name">…</div>
+          <div class="lv-compact-address" id="lv-compact-address" style="display:none;">
+            <span class="lv-pin">📍</span><span id="lv-compact-address-text"></span>
+          </div>
+        </div>
+        <button class="lv-compact-expand" id="lv-compact-expand-btn" aria-label="Voir le détail">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 3 21 3 21 9"/>
-            <polyline points="9 21 3 21 3 15"/>
-            <line x1="21" y1="3" x2="14" y2="10"/>
-            <line x1="3" y1="21" x2="10" y2="14"/>
+            <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
       </div>
-      <div class="live-view-result-actions">
-        <button class="live-view-detail-inline secondary" id="live-view-retry-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px;">
-            <polyline points="23 4 23 10 17 10"/>
-            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-          </svg>
-          Refaire l'analyse
-        </button>
-        <button class="live-view-detail-inline" id="live-view-detail-btn">
-          Voir sur la carte →
-        </button>
+
+      <!-- Panneau détaillé (masqué par défaut, expand au tap) -->
+      <div class="lv-detail" id="lv-detail">
+        <div class="live-view-result-eyebrow" id="live-view-result-eyebrow">Tu vois</div>
+        <div class="live-view-result-name" id="lv-detail-title">…</div>
+        <div class="live-view-result-meta" id="live-view-poi-meta">Cherche autour de toi…</div>
+        <div class="live-view-minimap-wrap" id="live-view-minimap-wrap" style="display:none;">
+          <div class="live-view-minimap" id="live-view-minimap"></div>
+          <button class="live-view-minimap-expand" id="live-view-minimap-expand" aria-label="Ouvrir dans Maps">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </button>
+        </div>
+        <div class="live-view-result-actions">
+          <button class="live-view-detail-inline secondary" id="live-view-retry-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:5px;">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+            </svg>
+            Refaire l'analyse
+          </button>
+          <button class="live-view-detail-inline" id="live-view-detail-btn">
+            Voir sur la carte →
+          </button>
+        </div>
       </div>
     </div>
+
+    <!-- Backdrop pour fermer l'expand au tap sur la caméra -->
+    <div class="lv-backdrop" id="lv-backdrop"></div>
 
     <!-- Bouton capture central (œil) -->
     <div class="live-view-bottom">
@@ -12963,16 +13084,17 @@ async function openEyeView() {
     modeText.textContent = 'Découverte';
   }
 
-  // 3. Reset le bandeau résultat
+  // 3. V82 : Reset le bandeau résultat — état initial collapsed
   const result = document.getElementById('live-view-result');
-  const resultName = document.getElementById('live-view-poi-name');
-  const resultMeta = document.getElementById('live-view-poi-meta');
   result.classList.remove('show');
-  result.classList.add('searching');
-  resultName.textContent = 'Analyse en cours…';
-  resultMeta.textContent = liveViewNearbyPois.length > 0
-    ? `${liveViewNearbyPois.length} lieux du jour à repérer`
-    : 'Pointe quelque chose';
+  result.classList.remove('expanded'); // V82 : toujours partir replié
+  setLiveViewState({
+    eyebrow: 'Analyse en cours',
+    title: 'Analyse en cours…',
+    meta: 'Pointe quelque chose',
+    searching: true,
+    hasGps: false
+  });
 
   // Show result panel after small delay
   setTimeout(() => result.classList.add('show'), 250);
@@ -13134,26 +13256,64 @@ async function reverseGeocode(lat, lng) {
   }
 }
 
-async function runClaudeVisionAnalysis(voyActive, etapeActive) {
+// V82 : Helper pour mettre à jour compact + détail en même temps
+function setLiveViewState({ eyebrow, title, meta, address, searching, hasGps }) {
   const result = document.getElementById('live-view-result');
-  const resultEyebrow = document.getElementById('live-view-result-eyebrow');
-  const resultName = document.getElementById('live-view-poi-name');
-  const resultMeta = document.getElementById('live-view-poi-meta');
-  const detailBtn = document.getElementById('live-view-detail-btn');
+  if (!result) return;
 
-  result.classList.remove('searching');
+  // Compact
+  const compactTitle = document.getElementById('live-view-poi-name');
+  const compactAddrWrap = document.getElementById('lv-compact-address');
+  const compactAddrText = document.getElementById('lv-compact-address-text');
+  if (compactTitle) compactTitle.textContent = title || '…';
+  if (address && address.short && compactAddrWrap && compactAddrText) {
+    compactAddrText.textContent = address.short;
+    compactAddrWrap.style.display = '';
+  } else if (compactAddrWrap) {
+    compactAddrWrap.style.display = 'none';
+  }
+
+  // Détail
+  const detailEyebrow = document.getElementById('live-view-result-eyebrow');
+  const detailTitle = document.getElementById('lv-detail-title');
+  const detailMeta = document.getElementById('live-view-poi-meta');
+  if (detailEyebrow) detailEyebrow.textContent = eyebrow || 'Tu vois';
+  if (detailTitle) detailTitle.textContent = title || '…';
+  if (detailMeta) detailMeta.innerHTML = meta || '';
+
+  // States
+  if (searching) {
+    result.classList.add('searching');
+  } else {
+    result.classList.remove('searching');
+  }
   result.classList.add('show');
-  resultEyebrow.textContent = 'Alberto regarde';
-  resultName.textContent = '…';
-  resultMeta.textContent = 'Analyse de ce que tu vois';
-  if (detailBtn) detailBtn.textContent = 'Refaire l\'analyse →';
+
+  // Bouton "Voir sur la carte" — visible si GPS
+  const detailBtn = document.getElementById('live-view-detail-btn');
+  if (detailBtn) detailBtn.style.display = hasGps ? '' : 'none';
+}
+
+async function runClaudeVisionAnalysis(voyActive, etapeActive) {
+  // V82 : état "loading"
+  setLiveViewState({
+    eyebrow: 'Alberto regarde',
+    title: '…',
+    meta: 'Analyse de ce que tu vois',
+    searching: true,
+    hasGps: false
+  });
 
   // 1. Capture image
   const imageBase64 = captureVideoFrameBase64();
   if (!imageBase64) {
-    resultEyebrow.textContent = 'Erreur';
-    resultName.textContent = 'Caméra indisponible';
-    resultMeta.textContent = 'Réessaie dans une seconde';
+    setLiveViewState({
+      eyebrow: 'Erreur',
+      title: 'Caméra indisponible',
+      meta: 'Réessaie dans une seconde',
+      searching: false,
+      hasGps: false
+    });
     return;
   }
 
@@ -13239,9 +13399,13 @@ ${contextLines.join('\n')}`;
     ]);
 
     if (!response.ok) {
-      resultEyebrow.textContent = 'Erreur';
-      resultName.textContent = 'Analyse échouée';
-      resultMeta.textContent = gpsError ? gpsError : 'Réessaie dans une seconde';
+      setLiveViewState({
+        eyebrow: 'Erreur',
+        title: 'Analyse échouée',
+        meta: gpsError ? gpsError : 'Réessaie dans une seconde',
+        searching: false,
+        hasGps: !!gps
+      });
       return;
     }
 
@@ -13257,36 +13421,39 @@ ${contextLines.join('\n')}`;
       const cleanText = text.replace(/```json|```/g, '').trim();
       parsed = JSON.parse(cleanText);
     } catch (e) {
-      resultEyebrow.textContent = 'Tu vois';
-      resultName.textContent = text.slice(0, 50) || 'Indéterminé';
-      resultMeta.textContent = address ? address.short : (gpsError || 'Tap pour capturer');
+      setLiveViewState({
+        eyebrow: 'Tu vois',
+        title: text.slice(0, 50) || 'Indéterminé',
+        meta: address ? address.short : (gpsError || ''),
+        address: address,
+        searching: false,
+        hasGps: !!gps
+      });
       liveViewLastAnalysis = { name: text.slice(0, 50), context: '', address };
+      if (gps) initLiveViewMiniMap(gps.lat, gps.lng); else hideLiveViewMiniMap();
       return;
     }
 
     if (!liveViewActive) return;
 
-    // 6. Affiche le résultat avec adresse si dispo
-    resultEyebrow.textContent = 'Tu vois';
-    resultName.textContent = parsed.name || 'Scène';
-
-    // Compose la meta : contexte + adresse en dessous
-    if (address && address.short) {
-      resultMeta.innerHTML = `${parsed.context || ''}<br><span class="lv-address">📍 ${address.short}</span>`;
-    } else if (gpsError) {
-      resultMeta.innerHTML = `${parsed.context || ''}<br><span class="lv-address-error">⚠️ ${gpsError}</span>`;
-    } else {
-      resultMeta.textContent = parsed.context || '';
+    // V82 : compose la meta pour le panneau détail (le compact a déjà l'adresse à part)
+    let metaHtml = parsed.context || '';
+    if (gpsError) {
+      metaHtml += `<br><span class="lv-address-error">⚠️ ${gpsError}</span>`;
+    } else if (address && address.short) {
+      metaHtml += `<br><span class="lv-address">📍 ${address.short}</span>`;
     }
 
-    // V81 : Affiche le bouton "Voir sur la carte" SEULEMENT si GPS dispo
-    // Le bouton "Refaire l'analyse" est TOUJOURS visible.
-    const detailBtn81 = document.getElementById('live-view-detail-btn');
-    if (detailBtn81) {
-      detailBtn81.style.display = gps ? '' : 'none';
-    }
+    setLiveViewState({
+      eyebrow: 'Tu vois',
+      title: parsed.name || 'Scène',
+      meta: metaHtml,
+      address: address,
+      searching: false,
+      hasGps: !!gps
+    });
 
-    // V81 : Mini-map intégrée si GPS dispo
+    // Mini-map intégrée si GPS dispo
     if (gps) {
       initLiveViewMiniMap(gps.lat, gps.lng);
     } else {
@@ -13296,9 +13463,13 @@ ${contextLines.join('\n')}`;
     liveViewLastAnalysis = { ...parsed, address, gps };
   } catch (err) {
     console.error('Vision analysis error:', err);
-    resultEyebrow.textContent = 'Erreur';
-    resultName.textContent = 'Connexion perdue';
-    resultMeta.textContent = 'Réessaie';
+    setLiveViewState({
+      eyebrow: 'Erreur',
+      title: 'Connexion perdue',
+      meta: 'Réessaie',
+      searching: false,
+      hasGps: false
+    });
   }
 }
 
@@ -13352,10 +13523,15 @@ function initLiveViewMiniMap(lat, lng) {
       fillOpacity: 1
     }).addTo(liveViewMiniMap);
 
-    // Force le refresh après l'animation d'apparition
-    setTimeout(() => {
-      if (liveViewMiniMap) liveViewMiniMap.invalidateSize();
-    }, 350);
+    // V82 : Force plusieurs refresh — Leaflet a besoin de calculer ses tuiles
+    // quand le container devient réellement visible (transition expand de 300ms)
+    [50, 200, 400, 700, 1200].forEach(delay => {
+      setTimeout(() => {
+        if (liveViewMiniMap) {
+          try { liveViewMiniMap.invalidateSize(); } catch(e) {}
+        }
+      }, delay);
+    });
   } catch (err) {
     console.error('Mini-map init error:', err);
     wrap.style.display = 'none';
@@ -13582,6 +13758,35 @@ document.getElementById('live-view-retry-btn').addEventListener('click', () => {
 document.getElementById('live-view-minimap-expand').addEventListener('click', (e) => {
   e.stopPropagation();
   openGoogleMapsAtPosition();
+});
+
+// V82 : Toggle expand/collapse du bandeau résultat
+function toggleLiveViewExpand() {
+  const result = document.getElementById('live-view-result');
+  if (!result) return;
+  const isExpanded = result.classList.toggle('expanded');
+  // Refresh mini-map après animation (sinon les tuiles ne se chargent pas)
+  if (isExpanded && liveViewMiniMap) {
+    setTimeout(() => { try { liveViewMiniMap.invalidateSize(); } catch(e){} }, 350);
+  }
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+document.getElementById('lv-compact').addEventListener('click', (e) => {
+  // Évite de toggle si on a tappé l'icône expand (qui a son propre handler)
+  if (e.target.closest('.lv-compact-expand')) return;
+  toggleLiveViewExpand();
+});
+document.getElementById('lv-compact-expand-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleLiveViewExpand();
+});
+
+// V82 : Tap sur le backdrop (caméra) → replie le panneau si déplié
+document.getElementById('lv-backdrop').addEventListener('click', () => {
+  const result = document.getElementById('live-view-result');
+  if (result && result.classList.contains('expanded')) {
+    result.classList.remove('expanded');
+  }
 });
 
 // V47 : Voix depuis la live view → fermer la caméra et ouvrir sheet voix
