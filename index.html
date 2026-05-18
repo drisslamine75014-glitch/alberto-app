@@ -12947,7 +12947,7 @@ async function openEyeView() {
     liveViewGeoWatchId = navigator.geolocation.watchPosition(
       onLiveViewPositionUpdate,
       onLiveViewPositionError,
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
     );
   }
 
