@@ -6716,6 +6716,9 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
+    <!-- V86 : Badge version pour vérifier le déploiement -->
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v86</div>
+
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
 
@@ -13137,14 +13140,18 @@ async function openEyeView() {
   liveViewDayNum = etapeActive ? etapeActive.jour : null;
   liveViewNearbyPois = etapeActive && etapeActive.pois ? etapeActive.pois : [];
 
-  // 2. UI : si on a un voyage → indicateur "En voyage à X"
+  // 2. UI : indicateur de mode — V86 : caché si pas de voyage actif
+  const modeIndicator = document.getElementById('live-view-mode');
   const modeText = document.getElementById('live-view-mode-text');
   if (voyActive && etapeActive) {
     modeText.textContent = `À ${etapeActive.ville}`;
+    modeIndicator.style.display = '';
   } else if (voyActive) {
     modeText.textContent = voyActive.title;
+    modeIndicator.style.display = '';
   } else {
-    modeText.textContent = 'Découverte';
+    // Pas de voyage → on cache complètement la pastille (plus de "Découverte")
+    modeIndicator.style.display = 'none';
   }
 
   // 3. V82 : Reset le bandeau résultat — état initial collapsed
@@ -13319,6 +13326,22 @@ async function reverseGeocode(lat, lng) {
   }
 }
 
+// V86 : Watchdog — s'assure que le titre du compact n'est JAMAIS vide
+let lastValidCompactTitle = 'Pointe quelque chose';
+setInterval(() => {
+  const el = document.getElementById('live-view-poi-name');
+  if (!el) return;
+  const txt = (el.textContent || '').trim();
+  if (txt && txt !== '…') {
+    // On mémorise le dernier titre valide
+    lastValidCompactTitle = txt;
+  } else if (!txt) {
+    // Titre vide → on restore le dernier valide
+    console.warn('[watchdog] compact title vide → restauration:', lastValidCompactTitle);
+    el.textContent = lastValidCompactTitle;
+  }
+}, 500);
+
 // V82 : Helper pour mettre à jour compact + détail en même temps
 // V85 : Robuste — jamais de texte vide
 function setLiveViewState({ eyebrow, title, meta, address, searching, hasGps }) {
@@ -13342,6 +13365,7 @@ function setLiveViewState({ eyebrow, title, meta, address, searching, hasGps }) 
   const compactAddrText = document.getElementById('lv-compact-address-text');
   if (compactTitle) {
     compactTitle.textContent = safeTitle;
+    lastValidCompactTitle = safeTitle; // V86 : mémoire watchdog
   }
   if (address && address.short && compactAddrWrap && compactAddrText) {
     compactAddrText.textContent = address.short;
