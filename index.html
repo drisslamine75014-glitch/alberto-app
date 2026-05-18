@@ -6499,7 +6499,7 @@ button.map-nav-overlay svg {
       <div class="live-view-result-name" id="live-view-poi-name">…</div>
       <div class="live-view-result-meta" id="live-view-poi-meta">Cherche autour de toi…</div>
       <button class="live-view-detail-inline" id="live-view-detail-btn">
-        Plus de détail →
+        Refaire l'analyse →
       </button>
     </div>
 
@@ -13200,28 +13200,190 @@ async function openEyeView() {
     );
   }
 
-  // 7. MODE DÉMO : simuler position près d'un POI au bout de 2 sec
-  if (liveViewNearbyPois.length > 0) {
-    setTimeout(() => {
-      if (!liveViewActive) return;
-      if (!liveViewCurrentPoi && liveViewNearbyPois[0]) {
-        const target = liveViewNearbyPois[0];
-        const fakeLat = target.lat - (80 / 111000);
-        onLiveViewPositionUpdate({
-          coords: { latitude: fakeLat, longitude: target.lng, accuracy: 50 }
-        });
-      }
-    }, 2500);
+  // 7. V77 : VRAIE ANALYSE CLAUDE VISION
+  // Au lieu de simuler un POI proche, on capture la frame caméra
+  // et on envoie à Claude avec géoloc + contexte voyage pour analyse réelle.
+  setTimeout(() => {
+    if (!liveViewActive) return;
+    runClaudeVisionAnalysis(voyActive, etapeActive);
+  }, 1500);
+}
+
+// V77 : Capture frame vidéo en base64 JPEG
+function captureVideoFrameBase64() {
+  const video = document.getElementById('live-view-video');
+  if (!video || video.readyState < 2) return null;
+  const canvas = document.createElement('canvas');
+  // Réduit taille pour ne pas exploser tokens : max 1024px de large
+  const maxW = 1024;
+  const ratio = video.videoWidth ? Math.min(1, maxW / video.videoWidth) : 1;
+  canvas.width = Math.round(video.videoWidth * ratio);
+  canvas.height = Math.round(video.videoHeight * ratio);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // JPEG qualité 0.75 pour rester sous 500Ko
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+  // Extrait juste la partie base64 (sans le prefix "data:image/jpeg;base64,")
+  return dataUrl.split(',')[1] || null;
+}
+
+// V77 : Récupère la géoloc GPS du téléphone (Promise)
+function getCurrentPositionPromise() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
+    );
+  });
+}
+
+// V77 : Analyse l'image courante via Claude Vision + GPS + contexte voyage
+async function runClaudeVisionAnalysis(voyActive, etapeActive) {
+  const result = document.getElementById('live-view-result');
+  const resultEyebrow = document.getElementById('live-view-result-eyebrow');
+  const resultName = document.getElementById('live-view-poi-name');
+  const resultMeta = document.getElementById('live-view-poi-meta');
+
+  // Loader UI
+  result.classList.remove('searching');
+  result.classList.add('show');
+  resultEyebrow.textContent = 'Alberto regarde';
+  resultName.textContent = '…';
+  resultMeta.textContent = 'Analyse de ce que tu vois';
+
+  // 1. Capture image
+  const imageBase64 = captureVideoFrameBase64();
+  if (!imageBase64) {
+    resultEyebrow.textContent = 'Erreur';
+    resultName.textContent = 'Caméra indisponible';
+    resultMeta.textContent = 'Réessaie dans une seconde';
+    return;
+  }
+
+  // 2. GPS (en parallèle, pas bloquant si pas dispo)
+  const gps = await getCurrentPositionPromise();
+
+  // 3. Construit le prompt système et le message
+  const contextLines = [];
+  if (voyActive) {
+    contextLines.push(`L'utilisateur est en voyage : ${voyActive.title}${voyActive.destination ? ' (' + voyActive.destination + ')' : ''}.`);
+  }
+  if (etapeActive) {
+    contextLines.push(`Jour actuel : ${etapeActive.ville || etapeActive.titre || ''}.`);
+  }
+  if (gps) {
+    contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
   } else {
-    // Pas de voyage → afficher message "découverte"
-    setTimeout(() => {
-      if (!liveViewActive) return;
-      result.classList.remove('searching');
-      resultName.textContent = 'Reconnaissance d\'image';
-      resultMeta.textContent = 'Bientôt — pour l\'instant, capture pour garder ce moment';
-    }, 1500);
+    contextLines.push(`Position GPS : non disponible (l'utilisateur a refusé ou la géoloc est désactivée).`);
+  }
+
+  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone.
+
+Ton rôle : identifier en 1 phrase ce que l'utilisateur regarde, comme un guide local expert qui croise l'image et la position GPS.
+
+Style de réponse OBLIGATOIRE — réponds en JSON pur, RIEN d'autre, pas de balises markdown, pas de commentaire :
+{
+  "name": "nom court du lieu/objet/scène (max 5 mots, en italique-friendly)",
+  "context": "1 phrase de contexte chaleureux (max 15 mots) — anecdote, conseil ou observation pertinente"
+}
+
+Règles :
+- Si tu reconnais un monument/lieu célèbre via GPS + image → donne son nom propre
+- Si c'est un type de bâtiment/paysage générique → décris-le brièvement ("Église romane", "Vieux port de pêche")
+- Si c'est un objet du quotidien (table, intérieur) → sois honnête et factuel ("Intérieur, table en bois")
+- Si tu ne reconnais rien → "name": "Scène intérieure" et un contexte neutre
+- JAMAIS d'invention. Si tu ne sais pas, dis-le.
+- Toujours en français, ton chaleureux mais concis.
+
+${contextLines.join('\n')}`;
+
+  // 4. Construit le message multimodal (image + question texte)
+  const userMessage = {
+    role: 'user',
+    content: [
+      {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: 'image/jpeg',
+          data: imageBase64
+        }
+      },
+      {
+        type: 'text',
+        text: 'Qu\'est-ce que je vois ? Réponds en JSON pur selon le format imposé.'
+      }
+    ]
+  };
+
+  // 5. Appel API
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
+
+    const response = await fetch(CLAUDE_PROXY_URL, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: [userMessage]
+      })
+    });
+
+    if (!response.ok) {
+      resultEyebrow.textContent = 'Erreur';
+      resultName.textContent = 'Analyse échouée';
+      resultMeta.textContent = 'Réessaie dans une seconde';
+      return;
+    }
+
+    const data = await response.json();
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n')
+      .trim();
+
+    // 6. Parse la réponse JSON
+    let parsed = null;
+    try {
+      // Nettoie un éventuel markdown
+      const cleanText = text.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(cleanText);
+    } catch (e) {
+      // Fallback : afficher le texte brut
+      resultEyebrow.textContent = 'Tu vois';
+      resultName.textContent = text.slice(0, 50) || 'Indéterminé';
+      resultMeta.textContent = 'Tap pour capturer';
+      return;
+    }
+
+    // 7. Affiche le résultat dans l'UI
+    if (!liveViewActive) return;
+    resultEyebrow.textContent = 'Tu vois';
+    resultName.textContent = parsed.name || 'Scène';
+    resultMeta.textContent = parsed.context || 'Tap pour capturer';
+
+    // Stocke le contexte pour le "Plus de détail" (peut servir plus tard)
+    liveViewLastAnalysis = parsed;
+  } catch (err) {
+    console.error('Vision analysis error:', err);
+    resultEyebrow.textContent = 'Erreur';
+    resultName.textContent = 'Connexion perdue';
+    resultMeta.textContent = 'Réessaie';
   }
 }
+
+// V77 : Stockage analyse pour réutilisation
+let liveViewLastAnalysis = null;
 
 // Garder le nom historique pour compatibilité
 async function openLiveView(voyageId, dayNum) {
@@ -13230,9 +13392,11 @@ async function openLiveView(voyageId, dayNum) {
 }
 
 function onLiveViewPositionUpdate(position) {
+  // V77 : on N'écrase plus le résultat avec les POIs mockés.
+  // L'analyse réelle vient de Claude Vision via runClaudeVisionAnalysis().
+  // On garde juste le tracking GPS pour usage futur (proximité des étapes du voyage).
   const { latitude, longitude, accuracy } = position.coords;
 
-  // Trouver le POI le plus proche
   let nearestPoi = null;
   let nearestIdx = -1;
   let nearestDist = Infinity;
@@ -13246,14 +13410,10 @@ function onLiveViewPositionUpdate(position) {
     }
   });
 
-  if (!nearestPoi) {
-    updateLiveViewStatus(null, null, null);
-    return;
+  if (nearestPoi) {
+    liveViewCurrentPoi = { poi: nearestPoi, idx: nearestIdx, distance: nearestDist };
   }
-
-  liveViewCurrentPoi = { poi: nearestPoi, idx: nearestIdx, distance: nearestDist };
-  updateLiveViewStatus(nearestPoi, nearestIdx, nearestDist);
-  // V48 : plus de marquage auto silencieux (anti-flicage). Le user marque via le bouton capture.
+  // PLUS d'appel à updateLiveViewStatus ici — laisse l'analyse Vision occuper l'UI.
 }
 
 function onLiveViewPositionError(err) {
@@ -13385,13 +13545,22 @@ function closeLiveView() {
 // Listeners live view V47
 document.getElementById('live-view-close').addEventListener('click', closeLiveView);
 document.getElementById('live-view-detail-btn').addEventListener('click', () => {
-  if (liveViewCurrentPoi) {
-    const { idx } = liveViewCurrentPoi;
-    const vid = liveViewVoyageId;
-    const day = liveViewDayNum;
-    closeLiveView();
-    setTimeout(() => openPoiDetail(vid, day, idx), 300);
+  // V77 : relancer l'analyse Claude Vision (l'utilisateur a peut-être bougé la caméra)
+  if (!liveViewActive) return;
+  // Détermine si on est dans un voyage actif (pour le contexte)
+  const todayIso = TODAY.toISOString().slice(0,10);
+  let voyActive = null, etapeActive = null;
+  for (const m of MOMENTS) {
+    if (m.type !== 'voyage') continue;
+    if (!m.date) continue;
+    const end = m.endDate || m.date;
+    if (m.date <= todayIso && todayIso <= end) {
+      voyActive = m;
+      etapeActive = (m.etapes || []).find(e => e.date === todayIso);
+      break;
+    }
   }
+  runClaudeVisionAnalysis(voyActive, etapeActive);
 });
 
 // V47 : Voix depuis la live view → fermer la caméra et ouvrir sheet voix
