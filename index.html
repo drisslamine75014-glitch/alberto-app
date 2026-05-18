@@ -3817,6 +3817,207 @@ button { font-family: inherit; cursor: pointer; }
   pointer-events: none;
 }
 .voice-sheet.show { transform: translateY(0); pointer-events: auto; }
+
+/* V91 : Chat sheet — discussion conversationnelle avec Alberto */
+.chat-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg);
+  border-top-left-radius: 24px; border-top-right-radius: 24px;
+  z-index: 210;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1);
+  box-shadow: 0 -12px 40px rgba(15,42,53,0.2);
+  max-width: 480px; margin: 0 auto;
+  height: 88vh;
+  display: flex; flex-direction: column;
+  pointer-events: none;
+}
+.chat-sheet.show { transform: translateY(0); pointer-events: auto; }
+.chat-header {
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 12px;
+}
+.chat-header-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--olive);
+  color: #FFF8EE;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.chat-header-info { flex: 1; min-width: 0; }
+.chat-header-name {
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 18px; font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.chat-header-status {
+  font-family: 'Outfit', sans-serif; font-size: 11px;
+  color: var(--olive-deep); font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+.chat-close-btn {
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink); cursor: pointer; flex-shrink: 0;
+}
+.chat-close-btn:active { transform: scale(0.92); }
+.chat-close-btn svg { width: 16px; height: 16px; }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 12px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  line-height: 1.45;
+  word-wrap: break-word;
+}
+.chat-msg.alberto {
+  background: var(--bg-warm);
+  color: var(--ink);
+  align-self: flex-start;
+  border-bottom-left-radius: 6px;
+}
+.chat-msg.user {
+  background: var(--olive);
+  color: #FFF8EE;
+  align-self: flex-end;
+  border-bottom-right-radius: 6px;
+}
+.chat-msg.alberto.thinking {
+  background: var(--bg-warm);
+  align-self: flex-start;
+  padding: 14px 16px;
+  border-bottom-left-radius: 6px;
+}
+.chat-thinking-dots {
+  display: flex; gap: 4px;
+}
+.chat-thinking-dots span {
+  width: 6px; height: 6px;
+  background: var(--ink-3);
+  border-radius: 50%;
+  animation: chatBlink 1.4s infinite;
+}
+.chat-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.chat-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes chatBlink {
+  0%, 60%, 100% { opacity: 0.3; }
+  30% { opacity: 1; }
+}
+.chat-msg-image {
+  border-radius: 12px;
+  max-width: 220px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.chat-context-pill {
+  align-self: center;
+  background: var(--olive-tint);
+  color: var(--olive-deep);
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.chat-input-bar {
+  border-top: 1px solid var(--line);
+  padding: 10px 12px calc(10px + var(--safe-bottom));
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: var(--bg);
+}
+.chat-attach-btn {
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.chat-attach-btn:active { transform: scale(0.92); }
+.chat-attach-btn svg { width: 18px; height: 18px; }
+.chat-input {
+  flex: 1;
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 10px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  resize: none;
+  max-height: 120px;
+  outline: none;
+  line-height: 1.4;
+  min-height: 40px;
+}
+.chat-input:focus { border-color: var(--olive); }
+.chat-send-btn {
+  background: var(--olive);
+  color: #FFF8EE;
+  border: none;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.chat-send-btn:active:not(:disabled) { transform: scale(0.92); }
+.chat-send-btn svg { width: 18px; height: 18px; }
+
+.chat-attach-preview {
+  display: none;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-warm);
+  align-items: center;
+  gap: 10px;
+}
+.chat-attach-preview.show { display: flex; }
+.chat-attach-preview img {
+  width: 48px; height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.chat-attach-preview-label {
+  flex: 1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.chat-attach-remove {
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 4px;
+}
 .voice-body {
   padding: 30px 28px 20px;
   text-align: center;
@@ -6449,13 +6650,11 @@ button.map-nav-overlay svg {
 <body>
 
 <div class="top-bar">
-  <button class="top-bar-brand" id="brand-voice-btn" aria-label="Parler à Alberto">
+  <button class="top-bar-brand" id="brand-voice-btn" aria-label="Discuter avec Alberto">
     <span class="brand-name">Alberto<em>.</em></span>
     <span class="brand-mic">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="9" y="3" width="6" height="12" rx="3"/>
-        <path d="M5 11a7 7 0 0014 0"/>
-        <line x1="12" y1="18" x2="12" y2="21"/>
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
       </svg>
     </span>
   </button>
@@ -6672,8 +6871,8 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
-    <!-- V89 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v89</div>
+    <!-- V91 : Badge version pour vérifier le déploiement -->
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v91</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -6948,6 +7147,56 @@ button.map-nav-overlay svg {
 <div class="toast" id="toast"></div>
 
 <!-- VOICE SHEET -->
+<!-- V91 : CHAT SHEET — discussion conversationnelle avec Alberto -->
+<div class="chat-sheet" id="chat-sheet">
+  <div class="chat-header">
+    <div class="chat-header-avatar">A</div>
+    <div class="chat-header-info">
+      <div class="chat-header-name">Alberto</div>
+      <div class="chat-header-status" id="chat-header-status">en ligne</div>
+    </div>
+    <button class="chat-close-btn" id="chat-close-btn" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    <!-- Messages s'insèrent dynamiquement -->
+  </div>
+
+  <!-- Preview de la pièce jointe en cours -->
+  <div class="chat-attach-preview" id="chat-attach-preview">
+    <img id="chat-attach-thumb" alt="Pièce jointe" />
+    <div class="chat-attach-preview-label" id="chat-attach-label">Photo jointe</div>
+    <button class="chat-attach-remove" id="chat-attach-remove" aria-label="Retirer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="chat-input-bar">
+    <button class="chat-attach-btn" id="chat-attach-btn" aria-label="Joindre">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+    <input type="file" id="chat-file-input" accept="image/*" style="display:none;" />
+    <textarea class="chat-input" id="chat-input" rows="1" placeholder="Écris à Alberto…"></textarea>
+    <button class="chat-send-btn" id="chat-send-btn" aria-label="Envoyer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
 <div class="voice-sheet" id="voice-sheet">
   <div class="sheet-handle" id="voice-handle"></div>
   <button class="sheet-close-btn" id="voice-close-x" aria-label="Fermer">
@@ -8742,7 +8991,8 @@ function showCalDay(dateStr) {
 // ════════════════════════════════════════════════════════════
 // V65 : Logo "Alberto." = bouton voix unifié
 document.getElementById('brand-voice-btn').addEventListener('click', () => {
-  try { openVoiceSheet(); } catch(e) { showToast('Erreur: ' + e.message); console.error(e); }
+  // V91 : Bouton "Alberto." top-left ouvre le chat (plus de voice)
+  try { openChatSheet({ fresh: true }); } catch(e) { showToast('Erreur: ' + e.message); console.error(e); }
 });
 document.getElementById('btn-search').addEventListener('click', () => {
   try { openSearch(); } catch(e) { showToast('Erreur: ' + e.message); console.error(e); }
@@ -8832,6 +9082,316 @@ function initVoiceRecognition() {
   r.interimResults = true;
   r.maxAlternatives = 1;
   return r;
+}
+
+// ============================================
+// V91 — CHAT SHEET (discussion conversationnelle avec Alberto)
+// ============================================
+
+let abChatHistory = []; // {role: 'user'|'alberto', content: str, image?: base64, contextInfo?: str}
+let abChatPendingImage = null; // base64 de l'image en attente d'envoi
+let abChatPendingImageLabel = null;
+let abChatThinking = false;
+let abChatContextHint = null; // contexte initial (ex: dernière analyse Vision)
+
+function openChatSheet(opts = {}) {
+  const sheet = document.getElementById('chat-sheet');
+  const scrim = document.getElementById('scrim');
+
+  // Reset si nouvelle session
+  if (opts.fresh) {
+    abChatHistory = [];
+    abChatPendingImage = null;
+    abChatPendingImageLabel = null;
+    abChatContextHint = null;
+    document.getElementById('chat-messages').innerHTML = '';
+    hideChatAttachPreview();
+  }
+
+  // Contexte initial : ex. depuis l'œil avec la dernière analyse Vision
+  if (opts.contextHint) {
+    abChatContextHint = opts.contextHint;
+    renderChatContextPill(opts.contextHint);
+  }
+
+  // Message initial d'Alberto
+  if (abChatHistory.length === 0) {
+    let intro = opts.intro || 'Hello. Que puis-je faire pour toi ?';
+    if (opts.contextHint && opts.contextHint.title) {
+      intro = `On regardait ${opts.contextHint.title.toLowerCase()}. Tu veux que je t'en dise plus, ou autre chose ?`;
+    }
+    abChatHistory.push({ role: 'alberto', content: intro });
+    renderChatMessage('alberto', intro);
+  }
+
+  scrim.classList.add('show');
+  sheet.classList.add('show');
+
+  setTimeout(() => {
+    const input = document.getElementById('chat-input');
+    if (input) input.focus();
+    scrollChatToBottom();
+  }, 300);
+}
+
+function closeChatSheet() {
+  document.getElementById('chat-sheet').classList.remove('show');
+  document.getElementById('scrim').classList.remove('show');
+}
+
+function renderChatContextPill(ctx) {
+  const messagesEl = document.getElementById('chat-messages');
+  const pill = document.createElement('div');
+  pill.className = 'chat-context-pill';
+  pill.textContent = `Contexte : ${ctx.title || 'ce que tu vois'}`;
+  messagesEl.appendChild(pill);
+}
+
+function renderChatMessage(role, content, image) {
+  const messagesEl = document.getElementById('chat-messages');
+  const msg = document.createElement('div');
+  msg.className = `chat-msg ${role}`;
+  if (image) {
+    const img = document.createElement('img');
+    img.className = 'chat-msg-image';
+    img.src = 'data:image/jpeg;base64,' + image;
+    msg.appendChild(img);
+  }
+  if (content) {
+    const txt = document.createTextNode(content);
+    msg.appendChild(txt);
+  }
+  messagesEl.appendChild(msg);
+  scrollChatToBottom();
+}
+
+function showChatThinking() {
+  const messagesEl = document.getElementById('chat-messages');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg alberto thinking';
+  msg.id = 'chat-thinking-indicator';
+  msg.innerHTML = '<div class="chat-thinking-dots"><span></span><span></span><span></span></div>';
+  messagesEl.appendChild(msg);
+  scrollChatToBottom();
+}
+function hideChatThinking() {
+  const el = document.getElementById('chat-thinking-indicator');
+  if (el) el.remove();
+}
+
+function scrollChatToBottom() {
+  const messagesEl = document.getElementById('chat-messages');
+  setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 50);
+}
+
+function showChatAttachPreview(base64, label) {
+  abChatPendingImage = base64;
+  abChatPendingImageLabel = label || 'Photo';
+  const preview = document.getElementById('chat-attach-preview');
+  const thumb = document.getElementById('chat-attach-thumb');
+  const lbl = document.getElementById('chat-attach-label');
+  thumb.src = 'data:image/jpeg;base64,' + base64;
+  lbl.textContent = abChatPendingImageLabel;
+  preview.classList.add('show');
+}
+function hideChatAttachPreview() {
+  abChatPendingImage = null;
+  abChatPendingImageLabel = null;
+  const preview = document.getElementById('chat-attach-preview');
+  preview.classList.remove('show');
+}
+
+async function sendChatMessage() {
+  if (abChatThinking) return;
+  const input = document.getElementById('chat-input');
+  const text = (input.value || '').trim();
+  if (!text && !abChatPendingImage) return;
+
+  // Affiche le message user
+  const imageToSend = abChatPendingImage;
+  renderChatMessage('user', text, imageToSend);
+  abChatHistory.push({ role: 'user', content: text, image: imageToSend });
+
+  // Reset input
+  input.value = '';
+  input.style.height = 'auto';
+  hideChatAttachPreview();
+  updateChatSendBtn();
+
+  // Appel Claude
+  abChatThinking = true;
+  showChatThinking();
+  document.getElementById('chat-header-status').textContent = 'écrit…';
+
+  try {
+    const reply = await callClaudeChat(text, imageToSend);
+    hideChatThinking();
+    abChatThinking = false;
+    document.getElementById('chat-header-status').textContent = 'en ligne';
+
+    abChatHistory.push({ role: 'alberto', content: reply });
+    renderChatMessage('alberto', reply);
+  } catch (err) {
+    console.error('Chat error:', err);
+    hideChatThinking();
+    abChatThinking = false;
+    document.getElementById('chat-header-status').textContent = 'en ligne';
+    renderChatMessage('alberto', "Désolé, j'ai eu un souci. Tu peux réessayer ?");
+  }
+}
+
+async function callClaudeChat(userText, userImage) {
+  // Construit le system prompt avec le contexte
+  const contextLines = [];
+  contextLines.push(`Aujourd'hui : ${TODAY.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`);
+
+  if (abChatContextHint) {
+    contextLines.push(`L'utilisateur vient de pointer sa caméra vers : "${abChatContextHint.title || 'une scène'}".`);
+    if (abChatContextHint.context) contextLines.push(`Contexte de la scène : ${abChatContextHint.context}.`);
+    if (abChatContextHint.address) contextLines.push(`Position : ${abChatContextHint.address}.`);
+  }
+
+  const systemPrompt = `Tu es Alberto, un majordome IA chaleureux pour les voyages et la vie quotidienne. Tu parles français, tu tutoies. Tu es méditerranéen, mature, attentif, jamais collant.
+
+Ton style :
+- Concis (1-3 phrases en moyenne, pas de blabla)
+- Direct, sans formules creuses ("super !", "génial !", "n'hésite pas !")
+- Pas d'emojis
+- Tu vas droit au but
+- Tu poses UNE seule question à la fois si nécessaire
+- Tu peux donner des conseils tranchés, pas neutres
+
+Quand l'utilisateur envoie une photo, analyse-la et commente intelligemment en croisant avec sa position si pertinent.
+
+CONTEXTE :
+${contextLines.join('\n')}`;
+
+  // Build messages array
+  const messages = [];
+  // Historique précédent (sans le dernier user qui vient juste d'être pushé)
+  const histToSend = abChatHistory.slice(0, -1);
+  for (const m of histToSend) {
+    if (m.image) {
+      messages.push({
+        role: m.role === 'alberto' ? 'assistant' : 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: m.image } },
+          { type: 'text', text: m.content || 'Regarde cette photo.' }
+        ]
+      });
+    } else {
+      messages.push({
+        role: m.role === 'alberto' ? 'assistant' : 'user',
+        content: m.content
+      });
+    }
+  }
+  // Dernier message user
+  if (userImage) {
+    messages.push({
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: userImage } },
+        { type: 'text', text: userText || 'Regarde cette photo, qu\'en penses-tu ?' }
+      ]
+    });
+  } else {
+    messages.push({ role: 'user', content: userText });
+  }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
+
+  const response = await fetch(CLAUDE_PROXY_URL, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: 800,
+      system: systemPrompt,
+      messages: messages
+    })
+  });
+
+  if (!response.ok) throw new Error('API error');
+
+  const data = await response.json();
+  const text = (data.content || [])
+    .filter(b => b.type === 'text')
+    .map(b => b.text)
+    .join('\n')
+    .trim();
+
+  return text || "Hmm, je n'ai pas su quoi répondre. Reformule peut-être ?";
+}
+
+function updateChatSendBtn() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send-btn');
+  btn.disabled = (!input.value.trim() && !abChatPendingImage) || abChatThinking;
+}
+
+// Convert File to base64 (sans le préfixe data:...)
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Bindings chat-sheet (au DOMContentLoaded, ajouté plus bas dans le init)
+function initChatSheetBindings() {
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+      updateChatSendBtn();
+    });
+    input.addEventListener('keydown', (e) => {
+      // Sur desktop : Enter envoie, Shift+Enter = newline. Sur mobile : Enter = newline standard.
+      if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 768) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+  }
+
+  const sendBtn = document.getElementById('chat-send-btn');
+  if (sendBtn) sendBtn.addEventListener('click', sendChatMessage);
+
+  const closeBtn = document.getElementById('chat-close-btn');
+  if (closeBtn) closeBtn.addEventListener('click', closeChatSheet);
+
+  const attachBtn = document.getElementById('chat-attach-btn');
+  const fileInput = document.getElementById('chat-file-input');
+  if (attachBtn && fileInput) {
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const base64 = await fileToBase64(file);
+        showChatAttachPreview(base64, file.name || 'Photo');
+        updateChatSendBtn();
+      } catch (err) {
+        console.error(err);
+      }
+      fileInput.value = ''; // reset pour pouvoir reprendre la même photo
+    });
+  }
+
+  const removeAttach = document.getElementById('chat-attach-remove');
+  if (removeAttach) removeAttach.addEventListener('click', () => {
+    hideChatAttachPreview();
+    updateChatSendBtn();
+  });
 }
 
 function openVoiceSheet() {
@@ -13361,66 +13921,93 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
   // Stocke la position pour le swipe Google Maps
   liveViewLastGps = gps;
 
-  // 3. Reverse geocoding (en parallèle de l'appel Claude pour gagner du temps)
-  let addressPromise = gps ? reverseGeocode(gps.lat, gps.lng) : Promise.resolve(null);
-
-  // 4. Construit le prompt système
-  const contextLines = [];
-  if (voyActive) {
-    contextLines.push(`L'utilisateur est en voyage : ${voyActive.title}${voyActive.destination ? ' (' + voyActive.destination + ')' : ''}.`);
-  }
+  // 3. V90 : RÉCUPÈRE L'ADRESSE AVANT D'APPELER CLAUDE
+  // C'est le cœur de la valeur : Claude doit savoir OÙ on est (nom du lieu),
+  // pas juste les coordonnées chiffrées qu'il ne sait pas décoder.
+  let address = null;
   if (gps) {
-    contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
+    try {
+      address = await reverseGeocode(gps.lat, gps.lng);
+    } catch (err) {
+      console.warn('Reverse geocoding échoué:', err);
+    }
+  }
+
+  // 4. V90 : Construit un prompt système ENRICHI avec l'adresse réelle
+  const contextLines = [];
+
+  if (voyActive) {
+    contextLines.push(`L'utilisateur est actuellement en voyage : ${voyActive.title}${voyActive.destination ? ' à ' + voyActive.destination : ''}.`);
+  }
+
+  if (address) {
+    // V90 : on donne à Claude le nom du lieu en clair, pas juste les coordonnées
+    const parts = [];
+    if (address.short) parts.push(address.short);
+    if (address.city && !address.short.includes(address.city)) parts.push(address.city);
+    if (address.country) parts.push(address.country);
+    contextLines.push(`L'utilisateur se trouve physiquement à : ${parts.join(', ')}.`);
+    contextLines.push(`Coordonnées GPS exactes : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
+    contextLines.push(`Utilise cette localisation pour identifier précisément ce que l'utilisateur regarde. Si l'image montre un monument, place ou bâtiment célèbre cohérent avec cette adresse, nomme-le exactement.`);
+  } else if (gps) {
+    contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m, adresse non récupérée).`);
   } else {
     contextLines.push(`Position GPS : non disponible.${gpsError ? ' Raison : ' + gpsError : ''}`);
   }
 
-  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone.
+  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone, et tu connais sa position exacte.
 
-Ton rôle : identifier en 1 phrase ce que l'utilisateur regarde, comme un guide local expert qui croise l'image et la position GPS.
+Ton rôle : identifier en 1 phrase ce que l'utilisateur regarde, en CROISANT systématiquement l'image avec sa localisation. Tu es un guide local intelligent, pas un détecteur d'objets aveugle.
 
-Style de réponse OBLIGATOIRE — réponds en JSON pur, RIEN d'autre, pas de balises markdown, pas de commentaire :
+Méthode de raisonnement :
+1. Analyse ce que tu vois dans l'image (forme, style, contexte visuel)
+2. Croise avec la localisation : quels lieux célèbres, monuments, quartiers, restaurants, commerces se trouvent à cette adresse ?
+3. Si l'image correspond clairement à un lieu connu à cette position → nomme-le précisément
+4. Sinon, décris factuellement ce que tu vois
+
+Style de réponse OBLIGATOIRE — réponds en JSON pur, RIEN d'autre, pas de balises markdown :
 {
   "name": "nom court du lieu/objet/scène (max 5 mots)",
-  "context": "1 phrase de contexte chaleureux (max 15 mots) — anecdote, conseil ou observation pertinente"
+  "context": "1 phrase de contexte chaleureux qui exploite la localisation (max 20 mots) — anecdote locale, info historique, conseil de coin"
 }
 
-Règles :
-- Si tu reconnais un monument/lieu célèbre via GPS + image → donne son nom propre
-- Si c'est un type de bâtiment/paysage générique → décris-le brièvement ("Église romane", "Vieux port de pêche")
-- Si c'est un objet du quotidien (intérieur, table, plat) → sois honnête et factuel
-- Si tu ne reconnais rien → "name": "Scène intérieure" et un contexte neutre
-- JAMAIS d'invention. Si tu ne sais pas, dis-le.
-- Toujours en français, ton chaleureux mais concis.
+Exemples de bon raisonnement :
+- Image : arche en pierre + GPS Place de l'Étoile, Paris → "name": "Arc de Triomphe", "context": "Le monument emblématique des Champs-Élysées, tu peux monter au sommet pour la vue."
+- Image : vieille église romane + GPS Conques, Aveyron → "name": "Abbatiale Sainte-Foy", "context": "Étape majeure du chemin de Compostelle depuis le 11e siècle."
+- Image : intérieur cuisine + GPS résidentiel Antony → "name": "Cuisine moderne", "context": "Un coin convivial typique des appartements de banlieue parisienne."
+- Image : bord de mer rochers blancs + GPS Étretat → "name": "Falaises d'Étretat", "context": "L'aiguille creuse qui a inspiré Monet et Maupassant."
 
+Règles strictes :
+- JAMAIS d'invention : si l'image et la position ne matchent pas, dis ce que tu vois sans forcer
+- Si tu ne reconnais aucun lieu précis, sois honnête ("Rue résidentielle", "Intérieur d'appartement")
+- Toujours en français, ton chaleureux mais concis
+
+CONTEXTE DE L'UTILISATEUR :
 ${contextLines.join('\n')}`;
 
   const userMessage = {
     role: 'user',
     content: [
       { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
-      { type: 'text', text: 'Qu\'est-ce que je vois ? Réponds en JSON pur.' }
+      { type: 'text', text: 'Qu\'est-ce que je vois exactement, en croisant l\'image avec ma localisation ? Réponds en JSON pur.' }
     ]
   };
 
-  // 5. Appel API Claude
+  // 5. Appel API Claude (l'adresse est déjà dans le prompt)
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
 
-    const [response, address] = await Promise.all([
-      fetch(CLAUDE_PROXY_URL, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          model: CLAUDE_MODEL,
-          max_tokens: 300,
-          system: systemPrompt,
-          messages: [userMessage]
-        })
-      }),
-      addressPromise
-    ]);
+    const response = await fetch(CLAUDE_PROXY_URL, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: [userMessage]
+      })
+    });
 
     if (!response.ok) {
       setLiveViewState({
@@ -13802,17 +14389,26 @@ document.getElementById('lv-detail-close-btn').addEventListener('click', (e) => 
 });
 
 // V47 : Voix depuis la live view → fermer la caméra et ouvrir sheet voix
+// V91 : Bouton "voix" sur l'œil → ouvre le chat avec contexte de la dernière analyse Vision
 document.getElementById('live-view-voice-btn').addEventListener('click', () => {
-  if (liveViewVoyageId) pendingContextMoment = liveViewVoyageId;
+  const ctxHint = liveViewLastAnalysis ? {
+    title: liveViewLastAnalysis.name,
+    context: liveViewLastAnalysis.context,
+    address: liveViewLastAnalysis.address?.short
+  } : null;
   closeLiveView();
-  setTimeout(() => openVoiceSheet(), 350);
+  setTimeout(() => openChatSheet({ fresh: true, contextHint: ctxHint }), 350);
 });
 
-// V47 : Écrire depuis la live view → fermer caméra et ouvrir sheet en mode texte
+// V91 : Bouton "écrire" sur l'œil → idem, ouvre le chat avec contexte
 document.getElementById('live-view-write-btn').addEventListener('click', () => {
-  if (liveViewVoyageId) pendingContextMoment = liveViewVoyageId;
+  const ctxHint = liveViewLastAnalysis ? {
+    title: liveViewLastAnalysis.name,
+    context: liveViewLastAnalysis.context,
+    address: liveViewLastAnalysis.address?.short
+  } : null;
   closeLiveView();
-  setTimeout(() => { openVoiceSheet(); setTimeout(switchToTextMode, 50); }, 350);
+  setTimeout(() => openChatSheet({ fresh: true, contextHint: ctxHint }), 350);
 });
 
 // V48 : Bouton capture central
@@ -15110,6 +15706,9 @@ document.getElementById('feedback-clear-btn').addEventListener('click', clearAll
 
 // Init compteur au chargement
 updateFeedbackCount();
+
+// V91 : Init bindings chat sheet
+initChatSheetBindings();
 
 renderHome();
 </script>
