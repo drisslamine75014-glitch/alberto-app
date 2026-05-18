@@ -6038,9 +6038,29 @@ button { font-family: inherit; cursor: pointer; }
 }
 .lv-compact-expand svg { width: 16px; height: 16px; }
 .live-view-result-v82.expanded .lv-compact-expand { transform: rotate(180deg); }
+.live-view-result-v82.expanded .lv-compact { display: none; }
+.lv-detail-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ink);
+  z-index: 10;
+}
+.lv-detail-close:active { transform: scale(0.92); }
+.lv-detail-close svg { width: 16px; height: 16px; }
 
 /* Panneau DÉTAIL (masqué par défaut) */
 .lv-detail {
+  position: relative;
   background: rgba(255, 248, 238, 0.96);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -6059,7 +6079,9 @@ button { font-family: inherit; cursor: pointer; }
   padding-bottom: 0;
 }
 .live-view-result-v82.expanded .lv-detail {
-  max-height: 480px;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   opacity: 1;
   transform: scaleY(1);
   padding: 16px 20px;
@@ -6685,6 +6707,11 @@ button.map-nav-overlay svg {
 
       <!-- Panneau détaillé (masqué par défaut, expand au tap) -->
       <div class="lv-detail" id="lv-detail">
+        <button class="lv-detail-close" id="lv-detail-close-btn" aria-label="Replier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+        </button>
         <div class="live-view-result-eyebrow" id="live-view-result-eyebrow">Tu vois</div>
         <div class="live-view-result-name" id="lv-detail-title">…</div>
         <div class="live-view-result-meta" id="live-view-poi-meta">Cherche autour de toi…</div>
@@ -13489,8 +13516,9 @@ function initLiveViewMiniMap(lat, lng) {
   const mapEl = document.getElementById('live-view-minimap');
   if (!wrap || !mapEl) return;
 
-  // Affiche le wrapper
+  // V83 : Force wrap visible avant init Leaflet (sinon il calcule taille=0)
   wrap.style.display = 'block';
+  wrap.style.visibility = 'visible';
 
   // Reset si déjà initialisée
   if (liveViewMiniMap) {
@@ -13500,42 +13528,48 @@ function initLiveViewMiniMap(lat, lng) {
     mapEl.innerHTML = '';
   }
 
-  try {
-    liveViewMiniMap = L.map(mapEl, {
-      zoomControl: false,
-      attributionControl: false,
-      scrollWheelZoom: false,
-      dragging: true,
-      tap: true
-    }).setView([lat, lng], 16);
+  // V83 : Attend que le DOM ait flushé la visibilité, puis init Leaflet
+  requestAnimationFrame(() => {
+    try {
+      liveViewMiniMap = L.map(mapEl, {
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        dragging: true,
+        tap: true
+      }).setView([lat, lng], 16);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd'
-    }).addTo(liveViewMiniMap);
+      // V83 : OSM standard — plus fiable que cartocdn
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        crossOrigin: true
+      }).addTo(liveViewMiniMap);
 
-    // Marqueur "tu es ici" — cercle doré
-    liveViewMiniMapMarker = L.circleMarker([lat, lng], {
-      radius: 9,
-      fillColor: '#C77D3C',
-      color: '#FFF8EE',
-      weight: 3,
-      fillOpacity: 1
-    }).addTo(liveViewMiniMap);
+      // Marqueur "tu es ici" — cercle olive
+      liveViewMiniMapMarker = L.circleMarker([lat, lng], {
+        radius: 9,
+        fillColor: '#C77D3C',
+        color: '#FFF8EE',
+        weight: 3,
+        fillOpacity: 1
+      }).addTo(liveViewMiniMap);
 
-    // V82 : Force plusieurs refresh — Leaflet a besoin de calculer ses tuiles
-    // quand le container devient réellement visible (transition expand de 300ms)
-    [50, 200, 400, 700, 1200].forEach(delay => {
-      setTimeout(() => {
-        if (liveViewMiniMap) {
-          try { liveViewMiniMap.invalidateSize(); } catch(e) {}
-        }
-      }, delay);
-    });
-  } catch (err) {
-    console.error('Mini-map init error:', err);
-    wrap.style.display = 'none';
-  }
+      // V83 : Force invalidations agressives pour gérer l'animation expand
+      [100, 350, 600, 1000, 1500].forEach(delay => {
+        setTimeout(() => {
+          if (liveViewMiniMap) {
+            try {
+              liveViewMiniMap.invalidateSize(true);
+              liveViewMiniMap.setView([lat, lng], 16);
+            } catch(e) {}
+          }
+        }, delay);
+      });
+    } catch (err) {
+      console.error('Mini-map init error:', err);
+      wrap.style.display = 'none';
+    }
+  });
 }
 
 function hideLiveViewMiniMap() {
@@ -13765,9 +13799,15 @@ function toggleLiveViewExpand() {
   const result = document.getElementById('live-view-result');
   if (!result) return;
   const isExpanded = result.classList.toggle('expanded');
-  // Refresh mini-map après animation (sinon les tuiles ne se chargent pas)
+  // V83 : Refresh agressif mini-map après animation expand
   if (isExpanded && liveViewMiniMap) {
-    setTimeout(() => { try { liveViewMiniMap.invalidateSize(); } catch(e){} }, 350);
+    [50, 200, 400, 700, 1200].forEach(delay => {
+      setTimeout(() => {
+        if (liveViewMiniMap) {
+          try { liveViewMiniMap.invalidateSize(true); } catch(e){}
+        }
+      }, delay);
+    });
   }
   if (navigator.vibrate) navigator.vibrate(8);
 }
@@ -13787,6 +13827,14 @@ document.getElementById('lv-backdrop').addEventListener('click', () => {
   if (result && result.classList.contains('expanded')) {
     result.classList.remove('expanded');
   }
+});
+
+// V83 : Bouton close dans le panneau détail
+document.getElementById('lv-detail-close-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const result = document.getElementById('live-view-result');
+  if (result) result.classList.remove('expanded');
+  if (navigator.vibrate) navigator.vibrate(8);
 });
 
 // V47 : Voix depuis la live view → fermer la caméra et ouvrir sheet voix
