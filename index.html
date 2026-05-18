@@ -5993,6 +5993,22 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--ink-3);
   font-weight: 500;
   margin-bottom: 10px;
+  line-height: 1.5;
+}
+.lv-address {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--olive-deep);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.lv-address-error {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: #C9603A;
+  font-style: italic;
 }
 .live-view-detail-inline {
   background: var(--ink);
@@ -7013,7 +7029,8 @@ button.map-nav-overlay svg {
 </div>
 
 <script>
-const TODAY = new Date('2026-05-16T10:30:00');
+// V78 : date du jour = vraie date (plus de scénario démo figé)
+const TODAY = new Date();
 
 // ════════════════════════════════════════════════════════════
 // TASKS
@@ -7063,8 +7080,7 @@ async function callClaude(userMessage, contextMoment) {
     .sort((a,b) => new Date(a.date) - new Date(b.date))[0];
 
   const contextLines = [
-    `Aujourd'hui : ${TODAY.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`,
-    `Utilisateur : Driss (homme, 42 ans, marié à Aurélie, 2 enfants Clémence 15 et Maxou 12, Paris).`
+    `Aujourd'hui : ${TODAY.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`
   ];
   if (voyEnCours) contextLines.push(`Voyage en cours : ${voyEnCours.title} (${voyEnCours.destination || ''}).`);
   if (voyProchain) contextLines.push(`Prochain voyage : ${voyProchain.title} le ${voyProchain.date}.`);
@@ -7073,7 +7089,7 @@ async function callClaude(userMessage, contextMoment) {
     if (m) contextLines.push(`Contexte actuel : ${m.title} (${m.type}).`);
   }
 
-  const systemPrompt = `Tu es Alberto, le majordome IA chaleureux de Driss et sa famille. Tu parles français, tu tutoies. Tu es méditerranéen, mature, attentif, jamais collant.
+  const systemPrompt = `Tu es Alberto, un majordome IA chaleureux. Tu parles français, tu tutoies. Tu es méditerranéen, mature, attentif, jamais collant.
 
 Ton style :
 - Concis (1-3 phrases en moyenne)
@@ -7128,14 +7144,7 @@ ${contextLines.join('\n')}`;
   }
 }
 
-let TASKS = [
-  { id: 't1', title: "Acheter dessert vegan", due: '2026-05-17', linkedMomentId: 'm-tomorrow', done: false },
-  { id: 't2', title: "Réserver la patinoire pour Lou", due: '2026-05-18', linkedMomentId: 'm-anniv-lou', done: false },
-  { id: 't3', title: "Imprimer cartons d'invitation Lou", due: '2026-05-26', linkedMomentId: 'm-anniv-lou', done: false },
-  { id: 't4', title: "Appeler le pédiatre d'Émile", due: null, linkedMomentId: null, done: false },
-  { id: 't5', title: "Trouver les 3 hôtels Sicile", due: '2026-06-15', linkedMomentId: 'm-sicile', done: false },
-  { id: 't6', title: "Acheter cadeau Lou (casque musique)", due: '2026-06-15', linkedMomentId: 'm-anniv-lou', done: false }
-];
+let TASKS = [];
 
 // V69 : BUDGET MENSUEL — transactions et config
 // Catégories de référence : couleurs + icônes pour le rendu visuel
@@ -7171,279 +7180,12 @@ let BUDGET_CONFIG = {
 };
 
 // Transactions (mai 2026, ~17 jours écoulés)
-let TRANSACTIONS = [
-  // Logement (récurrent)
-  { id: 'tr-1', date: '2026-05-02', amount: 950, merchant: 'Loyer mai', category: 'logement', recurring: true },
-
-  // Abonnements (récurrents)
-  { id: 'tr-2', date: '2026-05-05', amount: 15.99, merchant: 'Netflix', category: 'abonnements', recurring: true },
-  { id: 'tr-3', date: '2026-05-05', amount: 9.99, merchant: 'Spotify Famille', category: 'abonnements', recurring: true },
-  { id: 'tr-4', date: '2026-05-08', amount: 39.99, merchant: 'Orange Fibre', category: 'abonnements', recurring: true },
-
-  // Courses
-  { id: 'tr-5', date: '2026-05-03', amount: 87.40, merchant: 'Carrefour', category: 'courses' },
-  { id: 'tr-6', date: '2026-05-09', amount: 64.20, merchant: 'Monoprix', category: 'courses' },
-  { id: 'tr-7', date: '2026-05-13', amount: 92.10, merchant: 'Carrefour', category: 'courses' },
-  { id: 'tr-8', date: '2026-05-16', amount: 38.50, merchant: 'Picard', category: 'courses' },
-
-  // Restos
-  { id: 'tr-9', date: '2026-05-04', amount: 68, merchant: 'Le Petit Vendôme', category: 'restos' },
-  { id: 'tr-10', date: '2026-05-07', amount: 24, merchant: 'Café de Flore', category: 'restos' },
-  { id: 'tr-11', date: '2026-05-10', amount: 142, merchant: 'Le Bistrot Paul Bert', category: 'restos' },
-  { id: 'tr-12', date: '2026-05-12', amount: 38, merchant: 'Big Mamma', category: 'restos' },
-  { id: 'tr-13', date: '2026-05-14', amount: 89, merchant: "Chez l'Ami Jean", category: 'restos' },
-  { id: 'tr-14', date: '2026-05-15', amount: 57, merchant: 'Pizza Popolare', category: 'restos' },
-
-  // Transport
-  { id: 'tr-15', date: '2026-05-04', amount: 75.20, merchant: 'Total Essence', category: 'transport' },
-  { id: 'tr-16', date: '2026-05-06', amount: 14.50, merchant: 'Uber', category: 'transport' },
-  { id: 'tr-17', date: '2026-05-11', amount: 75.20, merchant: 'Carrefour Essence', category: 'transport' },
-
-  // Voyages (prépa Sicile + Honfleur)
-  { id: 'tr-18', date: '2026-05-06', amount: 740, merchant: 'Air France · Sicile', category: 'voyages', linkedVoyageId: 'm-sicile' },
-  { id: 'tr-19', date: '2026-05-14', amount: 220, merchant: 'Airbnb · Honfleur', category: 'voyages', linkedVoyageId: 'm-honfleur-now' },
-
-  // Cadeaux
-  { id: 'tr-20', date: '2026-05-09', amount: 45, merchant: 'Fnac · livre Marc', category: 'cadeaux' },
-
-  // Loisirs
-  { id: 'tr-21', date: '2026-05-11', amount: 28, merchant: 'Cinéma UGC', category: 'loisirs' },
-  { id: 'tr-22', date: '2026-05-15', amount: 65, merchant: 'Decathlon · pneu vélo', category: 'loisirs' },
-
-  // Enfants
-  { id: 'tr-23', date: '2026-05-12', amount: 42, merchant: 'Étiquettes scolaires', category: 'enfants' },
-  { id: 'tr-24', date: '2026-05-16', amount: 28, merchant: 'Cantine Maxou', category: 'enfants' },
-
-  // Santé
-  { id: 'tr-25', date: '2026-05-08', amount: 35, merchant: 'Pharmacie de la Place', category: 'sante' }
-];
+let TRANSACTIONS = [];
 
 // Mois courant (curseur pour navigation entre mois)
 let currentBudgetMonth = '2026-05';
 
-let MOMENTS = [
-  // AUJOURD'HUI (samedi 16 mai 2026 - en réalité vendredi)
-  { id: 'm-today-1', date: '2026-05-16', time: '09:00', duration: '1h', type: 'sortie', title: 'Yoga avec Camille', meta: 'Studio Tigre · 1h', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-today-2', date: '2026-05-16', time: '13:00', duration: '1h30', type: 'resto', title: 'Déjeuner avec Aurélie', meta: 'Café du Marais', body: "", tags: [], photos: [], sections: [] },
-
-  // FUTUR
-  { id: 'm-tomorrow', date: '2026-05-17', time: '20:00', type: 'soiree', title: 'Dîner chez Vincent & Sarah', meta: 'Samedi 20h · 14e arr.', body: "Premier dîner chez eux depuis leur déménagement. Ils sont vegan.", tags: [{label:'apporter dessert',kind:'warn'}], photos: [], sections: [
-    {label: "Note d'Alberto", body: "Ils sont vegan. La dernière fois tu avais apporté une tarte aux figues, ils avaient adoré. Tu veux que je te trouve une bonne pâtisserie vegan dans le 14e ?"}
-  ]},
-  { id: 'm-paques', date: '2026-05-19', type: 'weekend', title: 'Long weekend de Pâques', meta: '4 jours · rien de prévu', body: "", tags: [{label:'à décider',kind:'warn'}], photos: [], sections: [
-    {label: 'Mes 3 idées', body: "1. Honfleur — 2h de route, petits ports. 2. Perche — 1h30, châteaux, forêts. 3. Beaune — vignobles, gastronomie."}
-  ]},
-
-  // VOYAGE EN COURS — pour tester le mode PENDANT
-  { id: 'm-honfleur-now', date: '2026-05-14', endDate: '2026-05-18', type: 'voyage', title: 'Week-end Honfleur', meta: '4 jours · en famille', body: "Week-end improvisé à Honfleur.", tags: [], photos: [], destination: 'Honfleur, Normandie', voyageurs: 'Driss, Aurélie, Clémence, Maxou', budget: { estime: 850, engage: 620 }, etapes: [
-    { jour: 1, date: '2026-05-14', ville: 'Honfleur', lat: 49.4197, lng: 0.2329, notes: 'Arrivée vers 17h. Check-in Hôtel Le Cheval Blanc.',
-      matin: 'Départ de Paris vers 14h',
-      midi: 'Déjeuner sur la route, aire de Pont-Audemer',
-      soir: 'Arrivée 17h, check-in, dîner port (La Lieutenance)',
-      hotel: 'Hôtel Le Cheval Blanc · 4 nuits (confirmé)',
-      todos: [],
-      pois: [
-        { nom: 'Hôtel Le Cheval Blanc', lat: 49.4203, lng: 0.2347, type: 'hotel', anecdote: 'Sur les quais, vue directe sur le Vieux Bassin.' },
-        { nom: 'Restaurant La Lieutenance', lat: 49.4209, lng: 0.2343, type: 'resto', anecdote: 'Cuisine normande dans une bâtisse historique près du port.' }
-      ]
-    },
-    { jour: 2, date: '2026-05-15', ville: 'Honfleur', lat: 49.4197, lng: 0.2329, notes: 'Vieux bassin, église Sainte-Catherine, balade côte de Grâce.',
-      matin: 'Vieux bassin, marché bio',
-      midi: 'Déjeuner Le Tilbury',
-      soir: 'Église Sainte-Catherine, balade côte de Grâce au coucher',
-      hotel: 'Hôtel Le Cheval Blanc',
-      todos: [],
-      pois: [
-        { nom: 'Vieux Bassin', lat: 49.4197, lng: 0.2335, type: 'visite',
-          seeing: 'Bassin du XVIIe siècle bordé de hautes maisons étroites en ardoise, reflétées dans l\'eau. Cœur historique et touristique de la ville.',
-          history: 'Creusé sous Colbert au XVIIe siècle pour faire de Honfleur un port royal. Les maisons d\'armateurs sur le quai Sainte-Catherine témoignent de la richesse du commerce transatlantique.',
-          anecdote: 'Eugène Boudin, né à Honfleur, y a peint ses premières marines vers 1850. Il a converti Monet à la peinture en plein air ici-même.' },
-        { nom: 'Église Sainte-Catherine', lat: 49.4205, lng: 0.2330, type: 'visite',
-          seeing: 'Plus grande église de France entièrement construite en bois, avec sa double nef et son clocher séparé. Toiture en forme de coque de bateau renversée.',
-          history: 'Bâtie au XVe siècle par les charpentiers de marine après la guerre de Cent Ans, faute de pierre et d\'argent. Restaurée plusieurs fois, conserve sa structure originale.',
-          anecdote: 'Le clocher est séparé du bâtiment principal pour éviter qu\'un incendie de cloche ne brûle toute l\'église — une précaution typique des charpentiers de marine.' },
-        { nom: 'Côte de Grâce', lat: 49.4262, lng: 0.2240, type: 'balade',
-          seeing: 'Promontoire boisé dominant Honfleur, avec la chapelle Notre-Dame de Grâce et un belvédère panoramique sur l\'estuaire de la Seine et le pont de Normandie.',
-          history: 'Lieu de pèlerinage des marins depuis le XIIe siècle. La chapelle actuelle date de 1606. Samuel de Champlain y a prié avant de partir fonder Québec en 1608.',
-          anecdote: 'Au coucher de soleil, l\'orientation plein nord-ouest fait du belvédère l\'un des plus beaux points de vue de Normandie.' },
-        { nom: 'Le Tilbury', lat: 49.4200, lng: 0.2340, type: 'resto',
-          seeing: 'Bistro normand contemporain en bord de Vieux Bassin, ambiance chaleureuse, terrasse l\'été.',
-          history: 'Repris par un jeune chef passé par les maisons étoilées de la côte. Cuisine du marché renouvelée chaque semaine.',
-          anecdote: 'Spécialité du chef : la sole meunière au beurre demi-sel et les coquilles Saint-Jacques de la baie de Seine.' }
-      ]
-    },
-    { jour: 3, date: '2026-05-16', ville: 'Étretat', lat: 49.7077, lng: 0.2057, notes: "Excursion aux falaises, déjeuner à l'Auberge de la Source, marche aiguille.",
-      matin: 'Route Honfleur → Étretat (1h)',
-      midi: 'Déjeuner Auberge de la Source',
-      soir: "Marche jusqu'à l'aiguille, retour Honfleur en soirée",
-      hotel: 'Hôtel Le Cheval Blanc',
-      todos: [],
-      pois: [
-        { nom: 'Falaises d\'Étretat', lat: 49.7077, lng: 0.2030, type: 'visite',
-          seeing: 'Falaises de craie blanche découpées en arches naturelles spectaculaires. La Manneporte, la Porte d\'Aval et l\'Aiguille forment un site unique au monde, dominant la plage de galets.',
-          history: 'Site géologique formé il y a 90 millions d\'années par l\'érosion marine. Devenues célèbres au XIXe siècle, ces falaises ont inspiré les Impressionnistes — Monet, Courbet, Boudin y ont peint en plein air pendant des décennies.',
-          anecdote: 'Maurice Leblanc y a fait vivre Arsène Lupin dans "L\'Aiguille creuse" (1909). Le gentleman cambrioleur cachait son trésor à l\'intérieur de l\'aiguille rocheuse de 70 mètres.' },
-        { nom: 'Aiguille d\'Étretat', lat: 49.7080, lng: 0.1990, type: 'visite',
-          seeing: 'Pic rocheux de 70 mètres dressé en pleine mer, à quelques dizaines de mètres de la falaise d\'Aval.',
-          history: 'Vestige d\'érosion ancien. La falaise s\'est creusée autour, laissant ce pic isolé. Au XIXe siècle déjà, l\'Aiguille fascinait peintres et écrivains.',
-          anecdote: 'Maurice Leblanc affirmait que ses creux contenaient les trésors des rois de France, cachés depuis Henri IV. Plusieurs explorations ont eu lieu, sans succès évidemment.' },
-        { nom: 'Auberge de la Source', lat: 49.6940, lng: 0.2110, type: 'resto',
-          seeing: 'Restaurant gastronomique dans un hameau verdoyant à 5 minutes d\'Étretat. Terrasse au calme, cuisine raffinée du chef.',
-          history: 'Ancien moulin du XVIIIe, reconverti en restaurant dans les années 1980. Maintenu en cuisine familiale depuis 3 générations.',
-          anecdote: 'Réservation très conseillée le week-end, surtout au printemps. Spécialités : turbot sauce normande, soufflé au Calvados.' },
-        { nom: 'Plage d\'Étretat', lat: 49.7068, lng: 0.2073, type: 'balade',
-          seeing: 'Plage de galets blancs encadrée par les deux falaises. À marée basse, accès aux grottes et à la base de l\'Aiguille.',
-          history: 'Plage de pêcheurs jusqu\'au XIXe, devenue station balnéaire avec l\'arrivée du train en 1890.',
-          anecdote: 'Les marées d\'équinoxe (mars/septembre) découvrent un platier d\'argile bleue très ancien, fossiles visibles.' }
-      ]
-    },
-    { jour: 4, date: '2026-05-17', ville: 'Deauville', lat: 49.3578, lng: 0.0786, notes: 'Planches, casino, marché. Retour Paris 17h.',
-      matin: 'Planches de Deauville, parasols colorés',
-      midi: 'Marché de Deauville, déjeuner au Bar du Soleil',
-      soir: 'Retour Paris (17h départ, 19h30 arrivée)',
-      hotel: '—',
-      todos: [],
-      pois: [
-        { nom: 'Les Planches', lat: 49.3590, lng: 0.0758, type: 'balade', anecdote: 'Promenade en bois de 643m face à la mer, parasols colorés iconiques, cabines au nom des stars du Festival du film américain.' },
-        { nom: 'Casino Barrière', lat: 49.3603, lng: 0.0707, type: 'visite', anecdote: 'Casino Belle Époque inauguré en 1912. Visite libre du bâtiment historique.' },
-        { nom: 'Bar du Soleil', lat: 49.3591, lng: 0.0762, type: 'resto', anecdote: 'Institution face à la plage, célèbre pour ses fruits de mer et son ambiance.' }
-      ]
-    }
-  ], reservations: [
-    { type: 'hotel', label: 'Hôtel Le Cheval Blanc · Honfleur · 4 nuits', status: 'ok', detail: 'Confirmé · 520 €' }
-  ], sections: [] },
-
-  { id: 'm-anniv-lou', date: '2026-06-21', type: 'evenement', title: 'Anniversaire de Lou (10 ans)', meta: 'Préparation à lancer', fort: true, body: "Les 10 ans de Lou. Patinoire avec 8 amies.", tags: [{label:'à préparer',kind:'warn'}], photos: [], participants: 'Lou + 8 amies (Léa, Manon, Capucine, Anna, Émma, Mia, Jade, Sarah)', budget: { estime: 280, engage: 0 }, sections: [] },
-  { id: 'm-sicile', date: '2026-07-04', endDate: '2026-07-11', type: 'voyage', title: 'Voyage en Sicile', meta: '8 jours · famille · 3 200 €', body: "Boucle Palerme → Cefalù → Taormine → Catane.", tags: [{label:'à finaliser',kind:'warn'}], photos: [], destination: 'Sicile, Italie', voyageurs: 'Driss, Aurélie, Clémence, Maxou', budget: { estime: 3200, engage: 1850 }, etapes: [
-    { jour: 1, date: '2026-07-04', ville: 'Palerme', lat: 38.1157, lng: 13.3613, notes: 'Arrivée 14h. Check-in B&B Vucciria.',
-      matin: 'Vol Paris → Palerme (8h25 départ, 11h05 arrivée)',
-      midi: 'Déjeuner sur le pouce à l\'aéroport ou en chemin',
-      soir: 'Dîner Trattoria Ai Cascinari (sicilien populaire). Couchage Vucciria.',
-      hotel: 'B&B Vucciria · 2 nuits (confirmé)',
-      todos: ['Réimprimer billets de vol'],
-      pois: [
-        { nom: 'B&B Vucciria', lat: 38.1180, lng: 13.3640, type: 'hotel', anecdote: 'Au cœur du quartier Vucciria, ancien marché de Palerme.' },
-        { nom: 'Trattoria Ai Cascinari', lat: 38.1106, lng: 13.3494, type: 'resto', anecdote: 'Trattoria populaire siciliennne, fréquentée par les locaux, prix doux.' }
-      ]
-    },
-    { jour: 2, date: '2026-07-05', ville: 'Palerme', lat: 38.1157, lng: 13.3613, notes: 'Marchés, cathédrale, chapelle palatine.',
-      matin: 'Marché de Ballarò (8h), street food sicilien',
-      midi: 'Pause à la maison ou pizzeria',
-      soir: 'Chapelle palatine, dîner Trattoria Ferro di Cavallo',
-      hotel: 'B&B Vucciria · 2 nuits (confirmé)',
-      todos: [],
-      pois: [
-        { nom: 'Marché de Ballarò', lat: 38.1117, lng: 13.3590, type: 'visite', anecdote: 'Plus ancien marché de Palerme, ambiance arabe, street food (arancini, panelle, sfincione).' },
-        { nom: 'Cathédrale de Palerme', lat: 38.1144, lng: 13.3559, type: 'visite', anecdote: 'Mélange unique arabo-normand-byzantin-baroque. Toit accessible avec vue.' },
-        { nom: 'Chapelle Palatine', lat: 38.1116, lng: 13.3535, type: 'visite', anecdote: 'Mosaïques byzantines spectaculaires (XIIe siècle), chef-d\'œuvre du style arabo-normand.' },
-        { nom: 'Trattoria Ferro di Cavallo', lat: 38.1163, lng: 13.3636, type: 'resto', anecdote: 'Tradition palermitaine depuis 1944. Cuisine populaire, ambiance.' }
-      ]
-    },
-    { jour: 3, date: '2026-07-06', ville: 'Cefalù', lat: 38.0397, lng: 14.0233, notes: 'Route 1h. Plage, vieille ville, cathédrale arabo-normande.',
-      matin: 'Route Palerme → Cefalù (1h)',
-      midi: 'Déjeuner front de mer',
-      soir: 'Cathédrale au coucher du soleil, dîner vieille ville',
-      hotel: '⚠️ Hôtel à réserver — Riva del Sole pressenti',
-      todos: ['Réserver hôtel Cefalù'],
-      pois: [
-        { nom: 'Cathédrale de Cefalù', lat: 38.0394, lng: 14.0235, type: 'visite', anecdote: 'UNESCO. Christ Pantocrator en mosaïques byzantines, l\'un des plus beaux de Sicile.' },
-        { nom: 'Plage de Cefalù', lat: 38.0381, lng: 14.0227, type: 'balade', anecdote: 'Plage de sable fin face à la vieille ville, eau cristalline.' },
-        { nom: 'Rocca di Cefalù', lat: 38.0420, lng: 14.0274, type: 'balade', anecdote: 'Promontoire rocheux dominant la ville, ruines anciennes au sommet (1h de marche).' }
-      ]
-    },
-    { jour: 4, date: '2026-07-07', ville: 'Etna', lat: 37.7510, lng: 14.9934, notes: 'Excursion volcan. Refuge Sapienza, téléphérique.',
-      matin: 'Route Cefalù → Etna (2h30)',
-      midi: 'Refuge Sapienza, pique-nique',
-      soir: 'Couchage refuge Etna',
-      hotel: '⚠️ Refuge Etna à réserver',
-      todos: ['Réserver refuge Etna', 'Vérifier chaussures de marche'],
-      pois: [
-        { nom: 'Refuge Sapienza', lat: 37.6989, lng: 14.9986, type: 'hotel', anecdote: 'Point de départ du téléphérique (1900m altitude).' },
-        { nom: 'Téléphérique Etna', lat: 37.7029, lng: 14.9979, type: 'visite', anecdote: 'Montée à 2500m. Vue lunaire sur les cratères. Prévoir polaire même en été.' },
-        { nom: 'Cratères Silvestri', lat: 37.6917, lng: 15.0021, type: 'visite', anecdote: 'Cratères secondaires accessibles à pied, marche sur la lave noire.' }
-      ]
-    },
-    { jour: 5, date: '2026-07-08', ville: 'Taormine', lat: 37.8516, lng: 15.2912, notes: 'Théâtre grec, Isola Bella, baignade.',
-      matin: 'Descente Etna → Taormine (1h30)',
-      midi: 'Déjeuner Isola Bella',
-      soir: 'Théâtre antique au coucher de soleil, dîner Corso Umberto',
-      hotel: '⚠️ Hôtel Taormine à réserver — 2 nuits',
-      todos: ['Réserver Taormine'],
-      pois: [
-        { nom: 'Théâtre antique de Taormine', lat: 37.8527, lng: 15.2920, type: 'visite', anecdote: 'Théâtre gréco-romain avec vue sur l\'Etna en arrière-plan. Magique au coucher de soleil.' },
-        { nom: 'Isola Bella', lat: 37.8512, lng: 15.3000, type: 'balade', anecdote: 'Petit îlot accessible à marée basse. Plage de galets, snorkeling.' },
-        { nom: 'Corso Umberto', lat: 37.8519, lng: 15.2895, type: 'balade', anecdote: 'Rue principale piétonne, boutiques, glaciers, vue sur la baie.' }
-      ]
-    },
-    { jour: 6, date: '2026-07-09', ville: 'Taormine', lat: 37.8516, lng: 15.2912, notes: 'Détente, plage, dîner Trattoria Da Nino.',
-      matin: 'Plage Mazzarò',
-      midi: 'Déjeuner plage',
-      soir: 'Dîner Trattoria Da Nino (réputée)',
-      hotel: '⚠️ Hôtel Taormine (2e nuit)',
-      todos: [],
-      pois: [
-        { nom: 'Plage Mazzarò', lat: 37.8472, lng: 15.2980, type: 'balade', anecdote: 'Plage de galets en contrebas de Taormine, eau turquoise. Téléphérique pour descendre.' },
-        { nom: 'Trattoria Da Nino', lat: 37.8520, lng: 15.2906, type: 'resto', anecdote: 'Adresse réputée de Taormine, cuisine sicilienne authentique.' }
-      ]
-    },
-    { jour: 7, date: '2026-07-10', ville: 'Syracuse', lat: 37.0755, lng: 15.2866, notes: 'Ortygia, théâtre antique, oreille de Dionysos.',
-      matin: 'Route Taormine → Syracuse (1h30)',
-      midi: 'Ortygia, marché de Syracuse',
-      soir: 'Parc archéologique, dîner Ortygia',
-      hotel: '⚠️ Hôtel Syracuse à voir ou retour Catane',
-      todos: ['Décider couchage Syracuse vs Catane'],
-      pois: [
-        { nom: 'Ortygia', lat: 37.0608, lng: 15.2933, type: 'balade', anecdote: 'Île centre historique de Syracuse, dédale de ruelles, vestiges grecs, baroque sicilien.' },
-        { nom: 'Théâtre grec de Syracuse', lat: 37.0760, lng: 15.2728, type: 'visite', anecdote: 'L\'un des plus grands théâtres grecs au monde (Ve siècle av. JC).' },
-        { nom: 'Oreille de Dionysos', lat: 37.0772, lng: 15.2716, type: 'visite', anecdote: 'Grotte aux acoustiques exceptionnelles. Nom donné par Le Caravage.' }
-      ]
-    },
-    { jour: 8, date: '2026-07-11', ville: 'Catane → Paris', lat: 37.5079, lng: 15.0830, notes: 'Vol retour 18h.',
-      matin: 'Route Syracuse → Catane (1h)',
-      midi: 'Déjeuner Catane (poissons)',
-      soir: 'Vol retour 18h00 → arrivée Paris 21h15',
-      hotel: '—',
-      todos: ['Check-in en ligne vol retour'],
-      pois: [
-        { nom: 'Aéroport Catane Fontanarossa', lat: 37.4668, lng: 15.0664, type: 'visite', anecdote: 'Aéroport principal de Sicile orientale.' },
-        { nom: 'Marché aux poissons de Catane', lat: 37.5025, lng: 15.0875, type: 'visite', anecdote: 'A Piscaria — marché spectaculaire au pied de la cathédrale, ambiance napolitaine.' }
-      ]
-    }
-  ], reservations: [
-    { type: 'vol', label: 'Paris → Palerme · 4 juillet', status: 'ok', detail: 'Vueling, 8h25 → 11h05' },
-    { type: 'vol', label: 'Catane → Paris · 11 juillet', status: 'ok', detail: 'Vueling, 18h00 → 21h15' },
-    { type: 'hotel', label: 'B&B Vucciria · Palerme · 2 nuits', status: 'ok', detail: 'Confirmé · 220 €' },
-    { type: 'hotel', label: 'Hôtel Cefalù · 1 nuit', status: 'todo', detail: 'À réserver' },
-    { type: 'hotel', label: 'Refuge Etna · 1 nuit', status: 'todo', detail: 'À réserver' },
-    { type: 'hotel', label: 'Hôtel Taormine · 2 nuits', status: 'todo', detail: 'À réserver' }
-  ], sections: [] },
-
-  // PASSÉ RÉCENT
-  { id: 'm-yesterday', date: '2026-05-15', type: 'balade', title: 'Balade Marais avec Aurélie', meta: '4,2 km · 1h30 · 3 photos', body: "Promenade improvisée dans le Marais après le déjeuner.", tags: [], photos: ['Place des Vosges','Vitrine Merci','Café Camondo'], sections: [
-    {label: 'Le moment', body: "Vous avez longé la rue des Rosiers, fait une pause aux Vosges, et terminé chez Camondo. Aurélie t'a annoncé qu'elle changeait de boîte."}
-  ]},
-  { id: 'm-mer-resto', date: '2026-05-14', type: 'resto', title: 'Resto Pink Mamma · Vincent', meta: '98 €', body: "Dîner avec Vincent, pizza burrata, vin nature.", fort: true, tags: [], photos: ['La pizza','Avec Vincent'], sections: [] },
-  { id: 'm-mar-yoga', date: '2026-05-13', type: 'sortie', title: 'Yoga avec Camille', meta: 'Studio Tigre · 1h', body: "Cours du soir, vinyasa.", tags: [], photos: [], sections: [] },
-
-  // PASSÉ + ANCIEN
-  { id: 'm-w-budapest', date: '2026-05-09', type: 'voyage', title: 'Budapest avec Thomas', meta: '3 jours · 14 photos', fort: true, body: "Voyage à deux pour les 10 ans de mariage.", tags: [{label:'vécu',kind:'ok'}], photos: ['Pont des Chaînes','Bains Széchenyi','Vue de Buda','Marché central'], sections: [
-    {label: 'Coup de cœur', body: "Le restau Stand25, ré-réserver si vous revenez."},
-    {label: 'Budget', body: "Total 720 € pour 3 jours à deux."}
-  ]},
-  { id: 'm-w-anniv', date: '2026-05-06', type: 'evenement', title: 'Anniv 10 ans de mariage', meta: 'À la maison', tags: [], body: "Dîner intimiste à la maison.", photos: [], sections: [] },
-  { id: 'm-2w-1', date: '2026-05-02', type: 'sortie', title: 'Concert Jeanne Added', meta: 'Casino de Paris', tags: [], body: "Avec Marie. Excellent.", photos: [], sections: [] },
-  { id: 'm-2w-2', date: '2026-04-30', type: 'sortie', title: 'Brunch chez Eggs & Co', meta: '4 pers.', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-3w', date: '2026-04-25', type: 'balade', title: 'Vélo bois de Vincennes', meta: '18 km', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-3w-2', date: '2026-04-22', type: 'resto', title: 'Resto Le Servan', meta: '110 €', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-3w-3', date: '2026-04-19', type: 'sortie', title: 'Expo Pompidou (Surréalisme)', meta: 'famille', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-m-1', date: '2026-04-12', type: 'evenement', title: 'Anniv Émile (6 ans)', meta: 'Goûter · 8 enfants', fort: true, body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-m-2', date: '2026-04-05', type: 'voyage', title: 'Weekend Honfleur', meta: '3 jours · famille', fort: true, body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-m-3', date: '2026-03-28', type: 'sortie', title: 'Ski Megève', meta: '4 jours · famille', fort: true, body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-m-4', date: '2026-03-15', type: 'resto', title: 'Resto Le Chateaubriand', meta: 'avec Camille & Léo', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-2m-1', date: '2026-02-22', type: 'voyage', title: 'Ski La Plagne', meta: '1 semaine · famille', fort: true, body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-2m-2', date: '2026-02-14', type: 'evenement', title: 'Saint-Valentin · Septime', meta: '2 pers · 220 €', body: "", tags: [], photos: [], sections: [] },
-  { id: 'm-2m-3', date: '2026-02-03', type: 'sortie', title: 'Opéra Garnier (La Bohème)', meta: '2 pers', body: "", tags: [], photos: [], sections: [] }
-];
+let MOMENTS = [];
 
 // Alberto reminders — calculés dynamiquement
 // V68 : LA suggestion intelligente du jour (max 1)
@@ -7692,7 +7434,7 @@ function renderHome() {
   let html = `
     <div class="today-hero">
       <h1 class="today-hero-date">${fmtLongDate(TODAY)}</h1>
-      <div class="today-hero-sub">Bonjour Driss.</div>
+      <div class="today-hero-sub">Bonjour.</div>
       ${renderWeather()}
     </div>
   `;
@@ -13227,35 +12969,76 @@ function captureVideoFrameBase64() {
   return dataUrl.split(',')[1] || null;
 }
 
-// V77 : Récupère la géoloc GPS du téléphone (Promise)
+// V78 : GPS amélioré — demande la permission explicitement et propage l'erreur
 function getCurrentPositionPromise() {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) { resolve(null); return; }
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('GPS non supporté par ce navigateur'));
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
         accuracy: pos.coords.accuracy
       }),
-      () => resolve(null),
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
+      (err) => {
+        // err.code : 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
+        const messages = {
+          1: 'Permission GPS refusée. Va dans les réglages du site pour autoriser.',
+          2: 'Position introuvable. Active la localisation de ton téléphone.',
+          3: 'GPS trop lent à répondre.'
+        };
+        reject(new Error(messages[err.code] || err.message || 'GPS erreur'));
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     );
   });
 }
 
-// V77 : Analyse l'image courante via Claude Vision + GPS + contexte voyage
+// V78 : Reverse geocoding via Nominatim (OpenStreetMap) — gratuit, pas de clé requise
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr&zoom=18`;
+    const resp = await fetch(url, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    // data.display_name = adresse complète
+    // data.address = objet structuré
+    const addr = data.address || {};
+    // Construit une adresse lisible courte
+    const parts = [];
+    if (addr.house_number && addr.road) parts.push(`${addr.house_number} ${addr.road}`);
+    else if (addr.road) parts.push(addr.road);
+    if (addr.neighbourhood || addr.suburb) parts.push(addr.neighbourhood || addr.suburb);
+    if (addr.city || addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
+    return {
+      short: parts.join(', ') || data.display_name?.split(',').slice(0, 3).join(', ') || 'Adresse inconnue',
+      full: data.display_name || '',
+      city: addr.city || addr.town || addr.village || addr.county || '',
+      country: addr.country || ''
+    };
+  } catch (err) {
+    console.error('Reverse geocode error:', err);
+    return null;
+  }
+}
+
 async function runClaudeVisionAnalysis(voyActive, etapeActive) {
   const result = document.getElementById('live-view-result');
   const resultEyebrow = document.getElementById('live-view-result-eyebrow');
   const resultName = document.getElementById('live-view-poi-name');
   const resultMeta = document.getElementById('live-view-poi-meta');
+  const detailBtn = document.getElementById('live-view-detail-btn');
 
-  // Loader UI
   result.classList.remove('searching');
   result.classList.add('show');
   resultEyebrow.textContent = 'Alberto regarde';
   resultName.textContent = '…';
   resultMeta.textContent = 'Analyse de ce que tu vois';
+  if (detailBtn) detailBtn.textContent = 'Refaire l\'analyse →';
 
   // 1. Capture image
   const imageBase64 = captureVideoFrameBase64();
@@ -13266,21 +13049,31 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
     return;
   }
 
-  // 2. GPS (en parallèle, pas bloquant si pas dispo)
-  const gps = await getCurrentPositionPromise();
+  // 2. GPS — V78 : demande explicite + gestion d'erreur claire
+  let gps = null;
+  let gpsError = null;
+  try {
+    gps = await getCurrentPositionPromise();
+  } catch (err) {
+    gpsError = err.message;
+    console.warn('GPS unavailable:', err.message);
+  }
 
-  // 3. Construit le prompt système et le message
+  // Stocke la position pour le swipe Google Maps
+  liveViewLastGps = gps;
+
+  // 3. Reverse geocoding (en parallèle de l'appel Claude pour gagner du temps)
+  let addressPromise = gps ? reverseGeocode(gps.lat, gps.lng) : Promise.resolve(null);
+
+  // 4. Construit le prompt système
   const contextLines = [];
   if (voyActive) {
     contextLines.push(`L'utilisateur est en voyage : ${voyActive.title}${voyActive.destination ? ' (' + voyActive.destination + ')' : ''}.`);
   }
-  if (etapeActive) {
-    contextLines.push(`Jour actuel : ${etapeActive.ville || etapeActive.titre || ''}.`);
-  }
   if (gps) {
     contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
   } else {
-    contextLines.push(`Position GPS : non disponible (l'utilisateur a refusé ou la géoloc est désactivée).`);
+    contextLines.push(`Position GPS : non disponible.${gpsError ? ' Raison : ' + gpsError : ''}`);
   }
 
   const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone.
@@ -13289,59 +13082,51 @@ Ton rôle : identifier en 1 phrase ce que l'utilisateur regarde, comme un guide 
 
 Style de réponse OBLIGATOIRE — réponds en JSON pur, RIEN d'autre, pas de balises markdown, pas de commentaire :
 {
-  "name": "nom court du lieu/objet/scène (max 5 mots, en italique-friendly)",
+  "name": "nom court du lieu/objet/scène (max 5 mots)",
   "context": "1 phrase de contexte chaleureux (max 15 mots) — anecdote, conseil ou observation pertinente"
 }
 
 Règles :
 - Si tu reconnais un monument/lieu célèbre via GPS + image → donne son nom propre
 - Si c'est un type de bâtiment/paysage générique → décris-le brièvement ("Église romane", "Vieux port de pêche")
-- Si c'est un objet du quotidien (table, intérieur) → sois honnête et factuel ("Intérieur, table en bois")
+- Si c'est un objet du quotidien (intérieur, table, plat) → sois honnête et factuel
 - Si tu ne reconnais rien → "name": "Scène intérieure" et un contexte neutre
 - JAMAIS d'invention. Si tu ne sais pas, dis-le.
 - Toujours en français, ton chaleureux mais concis.
 
 ${contextLines.join('\n')}`;
 
-  // 4. Construit le message multimodal (image + question texte)
   const userMessage = {
     role: 'user',
     content: [
-      {
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: 'image/jpeg',
-          data: imageBase64
-        }
-      },
-      {
-        type: 'text',
-        text: 'Qu\'est-ce que je vois ? Réponds en JSON pur selon le format imposé.'
-      }
+      { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+      { type: 'text', text: 'Qu\'est-ce que je vois ? Réponds en JSON pur.' }
     ]
   };
 
-  // 5. Appel API
+  // 5. Appel API Claude
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
 
-    const response = await fetch(CLAUDE_PROXY_URL, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify({
-        model: CLAUDE_MODEL,
-        max_tokens: 300,
-        system: systemPrompt,
-        messages: [userMessage]
-      })
-    });
+    const [response, address] = await Promise.all([
+      fetch(CLAUDE_PROXY_URL, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens: 300,
+          system: systemPrompt,
+          messages: [userMessage]
+        })
+      }),
+      addressPromise
+    ]);
 
     if (!response.ok) {
       resultEyebrow.textContent = 'Erreur';
       resultName.textContent = 'Analyse échouée';
-      resultMeta.textContent = 'Réessaie dans une seconde';
+      resultMeta.textContent = gpsError ? gpsError : 'Réessaie dans une seconde';
       return;
     }
 
@@ -13352,28 +13137,45 @@ ${contextLines.join('\n')}`;
       .join('\n')
       .trim();
 
-    // 6. Parse la réponse JSON
     let parsed = null;
     try {
-      // Nettoie un éventuel markdown
       const cleanText = text.replace(/```json|```/g, '').trim();
       parsed = JSON.parse(cleanText);
     } catch (e) {
-      // Fallback : afficher le texte brut
       resultEyebrow.textContent = 'Tu vois';
       resultName.textContent = text.slice(0, 50) || 'Indéterminé';
-      resultMeta.textContent = 'Tap pour capturer';
+      resultMeta.textContent = address ? address.short : (gpsError || 'Tap pour capturer');
+      liveViewLastAnalysis = { name: text.slice(0, 50), context: '', address };
       return;
     }
 
-    // 7. Affiche le résultat dans l'UI
     if (!liveViewActive) return;
+
+    // 6. Affiche le résultat avec adresse si dispo
     resultEyebrow.textContent = 'Tu vois';
     resultName.textContent = parsed.name || 'Scène';
-    resultMeta.textContent = parsed.context || 'Tap pour capturer';
 
-    // Stocke le contexte pour le "Plus de détail" (peut servir plus tard)
-    liveViewLastAnalysis = parsed;
+    // Compose la meta : contexte + adresse en dessous
+    if (address && address.short) {
+      resultMeta.innerHTML = `${parsed.context || ''}<br><span class="lv-address">📍 ${address.short}</span>`;
+    } else if (gpsError) {
+      resultMeta.innerHTML = `${parsed.context || ''}<br><span class="lv-address-error">⚠️ ${gpsError}</span>`;
+    } else {
+      resultMeta.textContent = parsed.context || '';
+    }
+
+    // V78 : Si on a une position, propose le bouton "Voir sur la carte"
+    if (detailBtn) {
+      if (gps) {
+        detailBtn.innerHTML = 'Voir sur la carte →';
+        detailBtn.dataset.mapMode = 'open-map';
+      } else {
+        detailBtn.innerHTML = 'Refaire l\'analyse →';
+        detailBtn.dataset.mapMode = 'retry';
+      }
+    }
+
+    liveViewLastAnalysis = { ...parsed, address, gps };
   } catch (err) {
     console.error('Vision analysis error:', err);
     resultEyebrow.textContent = 'Erreur';
@@ -13382,8 +13184,21 @@ ${contextLines.join('\n')}`;
   }
 }
 
-// V77 : Stockage analyse pour réutilisation
+// V78 : Stockage analyse + GPS pour réutilisation (swipe vers map)
 let liveViewLastAnalysis = null;
+let liveViewLastGps = null;
+
+// V78 : Ouvre Google Maps centré sur la position courante
+function openGoogleMapsAtPosition() {
+  if (!liveViewLastGps) {
+    showToast('Position GPS non disponible');
+    return;
+  }
+  const { lat, lng } = liveViewLastGps;
+  // URL universelle : marche sur iOS et Android, ouvre l'app Maps si dispo, sinon le web
+  const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  window.open(url, '_blank');
+}
 
 // Garder le nom historique pour compatibilité
 async function openLiveView(voyageId, dayNum) {
@@ -13544,10 +13359,15 @@ function closeLiveView() {
 
 // Listeners live view V47
 document.getElementById('live-view-close').addEventListener('click', closeLiveView);
-document.getElementById('live-view-detail-btn').addEventListener('click', () => {
-  // V77 : relancer l'analyse Claude Vision (l'utilisateur a peut-être bougé la caméra)
+document.getElementById('live-view-detail-btn').addEventListener('click', (e) => {
   if (!liveViewActive) return;
-  // Détermine si on est dans un voyage actif (pour le contexte)
+  const btn = e.currentTarget;
+  // V78 : si on a une position GPS, le bouton ouvre Google Maps
+  if (btn.dataset.mapMode === 'open-map' && liveViewLastGps) {
+    openGoogleMapsAtPosition();
+    return;
+  }
+  // Sinon : relance l'analyse Claude Vision
   const todayIso = TODAY.toISOString().slice(0,10);
   let voyActive = null, etapeActive = null;
   for (const m of MOMENTS) {
@@ -13561,6 +13381,36 @@ document.getElementById('live-view-detail-btn').addEventListener('click', () => 
     }
   }
   runClaudeVisionAnalysis(voyActive, etapeActive);
+});
+
+// V78 : Long press sur le bouton "Voir sur la carte" → relance l'analyse au lieu
+let detailBtnPressTimer = null;
+const detailBtn78 = document.getElementById('live-view-detail-btn');
+detailBtn78.addEventListener('touchstart', () => {
+  detailBtnPressTimer = setTimeout(() => {
+    detailBtnPressTimer = null;
+    // Force relance analyse
+    const todayIso = TODAY.toISOString().slice(0,10);
+    let voyActive = null, etapeActive = null;
+    for (const m of MOMENTS) {
+      if (m.type !== 'voyage') continue;
+      if (!m.date) continue;
+      const end = m.endDate || m.date;
+      if (m.date <= todayIso && todayIso <= end) {
+        voyActive = m;
+        etapeActive = (m.etapes || []).find(e => e.date === todayIso);
+        break;
+      }
+    }
+    runClaudeVisionAnalysis(voyActive, etapeActive);
+    if (navigator.vibrate) navigator.vibrate(15);
+  }, 700);
+});
+detailBtn78.addEventListener('touchend', () => {
+  if (detailBtnPressTimer) { clearTimeout(detailBtnPressTimer); detailBtnPressTimer = null; }
+});
+detailBtn78.addEventListener('touchcancel', () => {
+  if (detailBtnPressTimer) { clearTimeout(detailBtnPressTimer); detailBtnPressTimer = null; }
 });
 
 // V47 : Voix depuis la live view → fermer la caméra et ouvrir sheet voix
