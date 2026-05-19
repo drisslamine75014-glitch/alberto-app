@@ -4148,6 +4148,7 @@ body:has(.chat-sheet.show) .feedback-fab { display: none; }
   box-shadow: 0 -12px 40px rgba(15,42,53,0.2);
   max-width: 480px; margin: 0 auto;
   height: 88vh;
+  height: 88dvh; /* V102 : dvh = hauteur visible réelle sur mobile, exclut barre navigateur */
   display: flex; flex-direction: column;
   pointer-events: none;
 }
@@ -4195,11 +4196,15 @@ body:has(.chat-sheet.show) .feedback-fab { display: none; }
 .chat-close-btn svg { width: 16px; height: 16px; pointer-events: none; }
 
 .chat-messages {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 16px 12px;
+  padding: 20px 16px 32px; /* V102 : plus de padding-bottom pour la dernière carte */
   display: flex; flex-direction: column; gap: 12px;
+  min-height: 0; /* V102 : critique en flex pour permettre le scroll sur Android */
+}
+.place-card, .wiki-card {
+  flex-shrink: 0; /* V102 : empêche le flex de compresser les cartes */
 }
 .chat-msg {
   max-width: 85%;
@@ -7433,7 +7438,7 @@ button.map-nav-overlay svg {
     </div>
 
     <!-- V93 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v101</div>
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v102</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -10214,10 +10219,21 @@ async function handleRouteRequest(card, fromGps, toLat, toLng, destName) {
     const url = `${ROUTE_PROXY_URL}?fromLat=${fromGps.lat}&fromLng=${fromGps.lng}&toLat=${toLat}&toLng=${toLng}&profile=foot-walking`;
     const resp = await fetch(url, { headers });
     if (!resp.ok) {
-      container.innerHTML = '<div class="route-error">Itinéraire non disponible. Ouverture sur Google Maps…</div>';
-      setTimeout(() => {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${toLat},${toLng}&travelmode=walking`, '_blank');
-      }, 800);
+      // V102 : fallback élégant si OpenRouteService non configuré
+      const distM = gpsDistance(fromGps.lat, fromGps.lng, toLat, toLng);
+      const walkMin = Math.max(1, Math.round(distM / 75)); // estimation 75m/min à pied
+      container.innerHTML = `
+        <div class="route-summary">
+          <div class="route-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span><strong>≈ ${walkMin} min à pied</strong> · ${distM}m à vol d'oiseau</span>
+          </div>
+          <a class="route-open-maps" href="https://www.google.com/maps/dir/?api=1&destination=${toLat},${toLng}&travelmode=walking" target="_blank" rel="noopener">Naviguer →</a>
+        </div>
+      `;
+      scrollChatToBottom();
       return;
     }
     const data = await resp.json();
