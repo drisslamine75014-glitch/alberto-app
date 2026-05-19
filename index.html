@@ -7438,7 +7438,7 @@ button.map-nav-overlay svg {
     </div>
 
     <!-- V93 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v102</div>
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v104</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -9736,6 +9736,9 @@ function initVoiceRecognition() {
 let abChatHistory = []; // {role: 'user'|'alberto', content: str, image?: base64, contextInfo?: str}
 let abChatPendingImage = null; // base64 de l'image en attente d'envoi
 let abChatPendingImageLabel = null;
+// V103 : position GPS + adresse en contexte permanent du chat
+let abChatGps = null;
+let abChatAddress = null;
 let abChatPendingDoc = null; // V95 : document attaché (PDF base64 ou texte)
 let abChatThinking = false;
 let abChatContextHint = null; // contexte initial (ex: dernière analyse Vision)
@@ -9777,11 +9780,45 @@ function openChatSheet(opts = {}) {
   scrim.classList.add('show');
   sheet.classList.add('show');
 
+  // V103 : récupère silencieusement la position GPS pour le contexte permanent du chat
+  // (sans bloquer l'UI, sans demander si déjà accordé)
+  refreshChatGpsContext();
+
   setTimeout(() => {
     const input = document.getElementById('chat-input');
     if (input) input.focus();
     scrollChatToBottom();
   }, 300);
+}
+
+/**
+ * V103 : Récupère silencieusement la position GPS + adresse pour le contexte du chat.
+ * Ne bloque pas l'UI. Si pas de permission, abChatGps reste null et Claude le saura.
+ */
+async function refreshChatGpsContext() {
+  try {
+    // Utilise la position si déjà connue (œil utilisé récemment) pour éviter une re-demande
+    if (liveViewLastGps && (Date.now() - (liveViewLastGps.ts || 0) < 5 * 60 * 1000)) {
+      abChatGps = liveViewLastGps;
+    } else {
+      const gps = await getQuickGps();
+      abChatGps = { ...gps, ts: Date.now() };
+    }
+
+    // Reverse geocoding async (pour avoir un nom de quartier/ville utilisable par Claude)
+    if (abChatGps) {
+      try {
+        abChatAddress = await reverseGeocode(abChatGps.lat, abChatGps.lng, abChatGps.accuracy);
+      } catch (e) {
+        // Pas grave, on garde juste les coordonnées
+      }
+    }
+  } catch (err) {
+    // Permission refusée ou indisponible — on continue sans GPS
+    console.warn('[Chat] GPS context unavailable:', err.message);
+    abChatGps = null;
+    abChatAddress = null;
+  }
 }
 
 function closeChatSheet() {
@@ -9866,6 +9903,7 @@ function hideChatAttachPreview() {
 
 const ROUTE_PROXY_URL = '/api/route';
 const WIKI_PROXY_URL = '/api/wiki';
+const OSM_PROXY_URL = '/api/osm'; // V104 : OpenStreetMap patrimoine
 
 /**
  * Détecte si le message utilisateur est une recherche de lieu.
@@ -9881,15 +9919,31 @@ function detectSearchIntent(text) {
     return { kind: 'insolite', query: text };
   }
 
-  // Patterns "recherche de lieu" classique
+  // V103 : Patterns élargis "recherche de lieu"
   const placePatterns = [
-    /\b(trouve|trouver|chercher|recherche)\s+(moi\s+)?(une?|des|le|la|les|du|de)?\s*\w+/i,
-    /\b(où|ou)\s+(est|sont|y\s*a|peut|puis-je|trouver|manger|boire|dormir|aller)/i,
-    /\b(pizzeria|restaurant|resto|bar|café|cafe|boulangerie|pharmacie|hôtel|hotel|supermarché|musée|musee|monument|parc)\s+(le\s+)?(plus\s+)?(proche|près|loin|sympa|bon|ouvert)/i,
-    /\b(la|le|une?|des)\s+(meilleur(e|s|es)?|bonne?s?|sympa)\s+\w+/i,
-    /\b(plus\s+proche|près\s+d['ei]\s*ici|autour\s+de\s+moi|du\s+coin|aux?\s+alentours?)/i,
-    /\b(recommandes?|conseille|propose)\s+(moi\s+)?(une?|des|un|le)/i,
-    /\b(guide\s*-?\s*moi|emmène\s*-?\s*moi|montre\s*-?\s*moi|y\s+aller|j'y\s+vais)/i
+    // Verbes de recherche explicites
+    /\b(trouve|trouver|cherche|chercher|recherche|montre|montrer|propose|proposer|recommande|recommander|suggère|suggérer|conseille)/i,
+
+    // Questions "où"
+    /\b(où|ou)\s+(est|sont|y\s*a|peut|puis|pourrais|trouver|manger|boire|dormir|aller|acheter)/i,
+
+    // Types de commerces (le simple fait de mentionner un type de lieu = intent fort)
+    /\b(pizzeria|restaurant|resto|bistrot|brasserie|taverne|bar|pub|café|cafe|boulangerie|patisserie|pâtisserie|pharmacie|hôtel|hotel|supermarché|épicerie|epicerie|musée|musee|monument|parc|jardin|plage|marché|marche|boucherie|poissonnerie|fleuriste|librairie|coiffeur|salon de thé|salon de the|glacier|fast food|fastfood|kebab|sushi|burger)\b/i,
+
+    // Indicateurs de proximité spatiale (très fort indicateur de recherche)
+    /\b(plus\s+proche|près\s+(d['e]\s*)?ici|proche\s+de\s+(moi|ici)|autour\s+de\s+(moi|ici)|aux?\s+alentours?|du\s+coin|dans\s+le\s+coin|à\s+côté|a\s+cote|aux\s+environs|près\s+de\s+moi|pres\s+de\s+moi|à\s+proximité|a\s+proximite)\b/i,
+
+    // Adjectifs de qualité combinés avec un type de lieu (déjà inclus ci-dessus mais on garde)
+    /\b(la|le|une?|des|du|d['e])\s+(bon(ne)?s?|meilleur(e|s|es)?|sympa|chouette|excellent(e|s|es)?|fameux|réputé(e|s|es)?|connu(e|s|es)?)\s+\w+/i,
+
+    // Demandes directes "j'ai faim", "j'ai soif"
+    /\b(j['ai]\s*(ai|veux)?\s*(faim|soif)|envie\s+de\s+(manger|boire|grignoter)|à\s+manger|a\s+manger|à\s+boire|a\s+boire)/i,
+
+    // Guidage
+    /\b(guide\s*-?\s*moi|emmène\s*-?\s*moi|montre\s*-?\s*moi|y\s+aller|j['y]\s*y?\s*vais|m['e]\s+conduire)/i,
+
+    // Question présence "y a-t-il un X par ici"
+    /\b(y\s*a-?\s*t\s*-?\s*il|y\s*'?\s*a|il\s+y\s+a)\s+un[e]?\s+\w+/i
   ];
 
   for (const re of placePatterns) {
@@ -9906,11 +9960,12 @@ function detectSearchIntent(text) {
  */
 async function handleSearchIntent(intent, originalText) {
   // 1. Récupère la position utilisateur
-  let gps = liveViewLastGps; // si l'œil a déjà été utilisé
+  // V103 : priorité au GPS du chat (récupéré à l'ouverture), fallback œil, fallback demande directe
+  let gps = abChatGps || liveViewLastGps;
   if (!gps) {
-    // Demande GPS direct
     try {
       gps = await getQuickGps();
+      abChatGps = { ...gps, ts: Date.now() };
     } catch (err) {
       renderChatMessage('alberto', "J'ai besoin de ta position pour chercher autour de toi. Active la géoloc dans ton navigateur.");
       return;
@@ -10036,6 +10091,27 @@ async function fetchWikiGeo(lat, lng, radius = 1000, limit = 10) {
     return data.articles || [];
   } catch (err) {
     console.warn('[Wiki] error:', err);
+    return [];
+  }
+}
+
+/**
+ * V104 : Appelle OpenStreetMap Overpass via le proxy pour récupérer
+ * monuments, gares, transports, patrimoine non-commercial.
+ */
+async function fetchOsmFeatures(lat, lng, radius = 200) {
+  try {
+    const url = `${OSM_PROXY_URL}?lat=${lat}&lng=${lng}&radius=${radius}`;
+    const headers = {};
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) {
+      headers['x-alberto-secret'] = ALBERTO_SECRET;
+    }
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return data.features || [];
+  } catch (err) {
+    console.warn('[OSM] error:', err);
     return [];
   }
 }
@@ -10374,10 +10450,26 @@ async function callClaudeChat(userText, userImage, userDoc) {
   const contextLines = [];
   contextLines.push(`Aujourd'hui : ${TODAY.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`);
 
+  // V103 : injecte SYSTÉMATIQUEMENT la position GPS si disponible
+  if (abChatGps) {
+    if (abChatAddress) {
+      const parts = [];
+      if (abChatAddress.short) parts.push(abChatAddress.short);
+      if (abChatAddress.city && !abChatAddress.short?.includes(abChatAddress.city)) parts.push(abChatAddress.city);
+      if (abChatAddress.country) parts.push(abChatAddress.country);
+      contextLines.push(`POSITION ACTUELLE DE L'UTILISATEUR : ${parts.join(', ')} (coordonnées GPS ${abChatGps.lat.toFixed(5)}, ${abChatGps.lng.toFixed(5)}, précision ~${Math.round(abChatGps.accuracy || 50)}m).`);
+    } else {
+      contextLines.push(`POSITION ACTUELLE DE L'UTILISATEUR : coordonnées GPS ${abChatGps.lat.toFixed(5)}, ${abChatGps.lng.toFixed(5)} (précision ~${Math.round(abChatGps.accuracy || 50)}m).`);
+    }
+    contextLines.push(`IMPORTANT : Tu connais déjà sa position. Ne lui demande JAMAIS où il est. Si tu as besoin de chercher un commerce ou un lieu autour de lui, indique-lui qu'il peut juste te demander "trouve une pizzeria" ou similaire et tu chercheras avec sa position.`);
+  } else {
+    contextLines.push(`Position GPS de l'utilisateur : non disponible (permission refusée ou indisponible).`);
+  }
+
   if (abChatContextHint) {
     contextLines.push(`L'utilisateur vient de pointer sa caméra vers : "${abChatContextHint.title || 'une scène'}".`);
     if (abChatContextHint.context) contextLines.push(`Contexte de la scène : ${abChatContextHint.context}.`);
-    if (abChatContextHint.address) contextLines.push(`Position : ${abChatContextHint.address}.`);
+    if (abChatContextHint.address) contextLines.push(`Position de la scène : ${abChatContextHint.address}.`);
   }
 
   const systemPrompt = `Tu es Alberto, un majordome IA chaleureux pour les voyages et la vie quotidienne. Tu parles français, tu tutoies. Tu es méditerranéen, mature, attentif, jamais collant.
@@ -15764,20 +15856,27 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
   // Stocke la position pour le swipe Google Maps
   liveViewLastGps = gps;
 
-  // 3. V90/V100 : RÉCUPÈRE L'ADRESSE + LES COMMERCES VOISINS EN PARALLÈLE
-  // Reverse geocoding (OSM) donne l'adresse postale.
-  // Google Places (V100) donne la liste précise des commerces dans 40m avec leurs noms officiels.
-  // C'est LE moat : Claude croise visuel + liste de candidats → identifie le bon commerce.
+  // 3. V104 : APPELS PARALLÈLES 4 SOURCES (le moat industrialisé)
+  //    - Reverse geocoding OSM (adresse postale)
+  //    - Google Places (commerces dans 40m)
+  //    - Wikipedia geosearch (monuments/sites historiques dans 300m)
+  //    - OSM Overpass (patrimoine, gares, équipements publics dans 200m)
   let address = null;
   let nearbyPlaces = [];
+  let nearbyWiki = [];
+  let nearbyOsm = [];
   if (gps) {
     try {
-      const [addrResult, placesResult] = await Promise.all([
+      const [addrResult, placesResult, wikiResult, osmResult] = await Promise.all([
         reverseGeocode(gps.lat, gps.lng, gps.accuracy),
-        fetchNearbyPlaces(gps.lat, gps.lng, 40) // 40m de rayon
+        fetchNearbyPlaces(gps.lat, gps.lng, 60),  // V104 : 60m au lieu de 40m
+        fetchWikiGeo(gps.lat, gps.lng, 300, 8),   // V104 : monuments dans 300m
+        fetchOsmFeatures(gps.lat, gps.lng, 200)   // V104 : patrimoine OSM 200m
       ]);
       address = addrResult;
       nearbyPlaces = placesResult || [];
+      nearbyWiki = wikiResult || [];
+      nearbyOsm = osmResult || [];
     } catch (err) {
       console.warn('Géolocalisation enrichie échouée:', err);
     }
@@ -15791,10 +15890,10 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
         distance: gpsDistance(gps.lat, gps.lng, p.lat, p.lng)
       }))
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 10); // top 10 plus proches
+      .slice(0, 8);
   }
 
-  // 4. V90/V100 : Construit un prompt système enrichi
+  // 4. V104 : Construit un prompt système ULTRA-ENRICHI avec 3 sources distinctes
   const contextLines = [];
 
   if (voyActive) {
@@ -15809,78 +15908,125 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
     contextLines.push(`Position approximative : ${parts.join(', ')}.`);
     contextLines.push(`Coordonnées GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
   } else if (gps) {
-    contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m, adresse non récupérée).`);
+    contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
   } else {
     contextLines.push(`Position GPS : non disponible.${gpsError ? ' Raison : ' + gpsError : ''}`);
   }
 
-  // V100 : Ajoute la liste précise des commerces voisins
+  // V104 : MONUMENTS / SITES HISTORIQUES (Wikipedia) — priorité haute pour patrimoine
+  if (nearbyWiki.length > 0) {
+    contextLines.push('');
+    contextLines.push(`📜 MONUMENTS, SITES HISTORIQUES ET LIEUX RÉFÉRENCÉS WIKIPÉDIA DANS UN RAYON DE 300m (CRITIQUE pour identifier patrimoine, statues, églises, palais, etc.) :`);
+    nearbyWiki.slice(0, 6).forEach((w, i) => {
+      const extract = w.extract ? ` — ${w.extract.slice(0, 200).replace(/\n/g, ' ')}` : '';
+      contextLines.push(`${i + 1}. ${w.name || w.title} (à ${w.distance}m)${extract}`);
+    });
+  }
+
+  // V104 : PATRIMOINE OSM (gares, monuments non-Wikipedia, équipements)
+  if (nearbyOsm.length > 0) {
+    contextLines.push('');
+    contextLines.push(`🏛️ PATRIMOINE, TRANSPORTS ET ÉQUIPEMENTS PUBLICS DANS UN RAYON DE 200m (source OpenStreetMap, COMPLÉMENT essentiel) :`);
+    nearbyOsm.slice(0, 10).forEach((o, i) => {
+      const desc = o.description ? ` — ${o.description.slice(0, 150)}` : '';
+      const cat = o.categoryLabel ? ` [${o.categoryLabel}]` : '';
+      const date = o.startDate ? `, datant de ${o.startDate}` : '';
+      const heritage = o.heritageLabel ? `, classé monument historique` : '';
+      contextLines.push(`${i + 1}. ${o.name || o.categoryLabel}${cat} — à ${o.distance}m${date}${heritage}${desc}`);
+    });
+  }
+
+  // V104 : COMMERCES (Google Places) — pour commerce/resto/boutique
   if (nearbyPlaces.length > 0) {
     contextLines.push('');
-    contextLines.push(`COMMERCES ET LIEUX RÉELS AUTOUR DE L'UTILISATEUR (par ordre de proximité, source Google Places) :`);
+    contextLines.push(`🏪 COMMERCES ET RESTAURANTS DANS UN RAYON DE 60m (Google Places, fiable) :`);
     nearbyPlaces.forEach((p, i) => {
       const typeStr = p.type ? ` (${p.type})` : '';
       const ratingStr = p.rating ? `, ${p.rating}★ ${p.ratingCount} avis` : '';
       contextLines.push(`${i + 1}. ${p.name}${typeStr} — à ${p.distance}m${ratingStr}`);
     });
-    contextLines.push('');
-    contextLines.push(`INSTRUCTION CRITIQUE : l'un de ces lieux est CERTAINEMENT ce que regarde l'utilisateur. Croise visuellement l'image avec cette liste et identifie le bon. Si tu vois une vitrine de boulangerie et qu'il y a une boulangerie dans la liste → c'est celle-là, nomme-la précisément. Si tu vois un restaurant chinois et qu'il y a un resto chinois dans la liste → c'est lui.`);
   }
 
-  // Stocke la liste pour usage ultérieur (album, chat, etc.)
+  // Stocke pour usage ultérieur
   liveViewLastNearbyPlaces = nearbyPlaces;
 
-  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone, et tu disposes d'une LISTE PRÉCISE des commerces et lieux qui sont physiquement autour de lui (issue de Google Places, donc fiable).
+  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux et lettré de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone, et tu disposes de TROIS sources de données fiables sur ce qui l'entoure :
 
-MÉTHODE OBLIGATOIRE — c'est ton avantage compétitif :
+  1. 📜 MONUMENTS / SITES HISTORIQUES (Wikipedia) — pour patrimoine, statues, églises, palais
+  2. 🏛️ PATRIMOINE / TRANSPORTS / ÉQUIPEMENTS PUBLICS (OpenStreetMap) — pour gares, fontaines, bâtiments classés, parcs
+  3. 🏪 COMMERCES / RESTAURANTS (Google Places) — pour boutiques, restaurants, hôtels
 
-1. ANALYSE L'IMAGE
-   - Type de lieu (restaurant, boulangerie, café, monument, etc.)
-   - Cuisine / spécialité si visible (chinois, italien, etc.)
-   - Enseignes lisibles, devanture, couleurs, style
-   - Détails distinctifs (devanture rouge, tables en terrasse, vitrine bombée, etc.)
+═══════════════════════════════════════════════════════
+MÉTHODE DE RAISONNEMENT OBLIGATOIRE — c'est ton moat contre ChatGPT
+═══════════════════════════════════════════════════════
 
-2. CROISE AVEC LA LISTE GOOGLE PLACES
-   - La liste contient les 10 lieux les plus proches avec noms réels, types et distances
-   - L'un d'eux est CERTAINEMENT ce qu'on regarde (sauf si on regarde dans un appartement privé)
-   - Choisis le candidat qui matche : type cohérent + distance courte + plausibilité visuelle
-   - Si plusieurs candidats du même type → privilégie le plus proche
+ÉTAPE 1 — LIS le texte visible dans l'image (PRIORITÉ ABSOLUE)
+   • Enseignes, panneaux, plaques, noms écrits, marques visibles
+   • Cite-les exactement, c'est l'indice n°1
 
-3. SOIS PRÉCIS DANS LA RÉPONSE
-   - Donne le NOM EXACT du commerce (depuis la liste Google), pas un nom générique
-   - Mentionne la note si bonne (4+★)
-   - Si tu n'es pas SÛR, indique-le ("vraisemblablement [nom]" ou "soit X soit Y")
+ÉTAPE 2 — IDENTIFIE LA NATURE de ce qui est montré
+   • [MONUMENT/PATRIMOINE] : église, château, statue, ruines, fontaine, palais, place historique, mémorial
+   • [TRANSPORT/PUBLIC] : gare, métro, mairie, école, bibliothèque
+   • [NATURE/PAYSAGE] : plage, parc, sommet, point de vue, fleuve, plante, arbre
+   • [COMMERCE] : restaurant, boulangerie, café, boutique, hôtel
+   • [INTÉRIEUR PRIVÉ] : appartement, bureau, chambre
+   • [PLAT/OBJET] : assiette, plat, objet du quotidien
 
-4. CAS PARTICULIERS
-   - Si image dans un appartement / lieu privé → décris factuellement, n'utilise pas la liste
-   - Si liste vide ou hors ville → ton mode habituel (description directe)
-   - Si paysage / monument célèbre → reconnais-le même hors liste
+ÉTAPE 3 — CROISE AVEC LA BONNE SOURCE
+   • Si MONUMENT/PATRIMOINE → cherche d'abord dans Wikipedia, puis OSM
+       → Donne le NOM HISTORIQUE + 1 fait marquant (date, événement, particularité)
+       → Le ton : guide érudit chaleureux, pas Wikipédia froid
+   • Si TRANSPORT/PUBLIC → cherche dans OSM
+       → "Gare d'Antony (RER B)" et non "Espace intérieur"
+   • Si COMMERCE → cherche dans Google Places
+       → Nom officiel + note ★ si > 4 + 1 fait
+   • Si NATURE → identifie l'espèce si tu peux (cerisier du Japon, olivier...), ou nomme le lieu naturel
+   • Si INTÉRIEUR PRIVÉ → ne cite AUCUNE liste, dis "intérieur privé"
 
-Format de réponse OBLIGATOIRE — JSON pur, RIEN d'autre, pas de markdown :
+ÉTAPE 4 — SOIS PRÉCIS, PAS GÉNÉRIQUE
+   ❌ NE DIS JAMAIS : "Bâtiment ancien", "Pizzeria de quartier", "Espace intérieur", "Vitrine de commerce"
+   ✅ DIS TOUJOURS un NOM précis tiré des sources OU une description riche
+
+═══════════════════════════════════════════════════════
+EXEMPLES OBLIGATOIRES À REPRODUIRE
+═══════════════════════════════════════════════════════
+
+✅ Image : église byzantine avec dôme
+   Wikipedia : "Église des Saints Apôtres (Kalamata) — Construite au XIIIe siècle, l'une des rares à avoir survécu au tremblement de terre de 1986."
+   → {"name": "Église des Saints Apôtres", "context": "XIIIe siècle, byzantine tardive — l'une des rares à avoir survécu au tremblement de terre de 1986."}
+
+✅ Image : statue d'un homme à cheval
+   OSM : "Statue de Theodoros Kolokotronis" + Wikipedia : "Héros de l'indépendance grecque (1770-1843)"
+   → {"name": "Statue de Theodoros Kolokotronis", "context": "Héros de l'indépendance grecque (1770-1843), né dans la région de Messénie."}
+
+✅ Image : hall de gare en pierre
+   OSM : "Gare d'Antony (RER B)"
+   → {"name": "Gare d'Antony (RER B)", "context": "Mise en service en 1854, c'est l'une des plus anciennes gares de banlieue parisienne."}
+
+✅ Image : pizzeria avec 'FIVE PIZZA' visible
+   Google Places : "Five Pizza Original - Antony" 4.4★ 1331 avis, à 8m
+   → {"name": "Five Pizza Original - Antony", "context": "4.4★ avec 1331 avis — chaîne réputée pour ses pizzas au feu de bois avec un bon rapport qualité-prix."}
+
+✅ Image : vieille bâtisse en pierre sans enseigne
+   Wikipedia (50m) : "Église Saint-Saturnin d'Antony — XVe-XVIIIe siècles, classée monument historique"
+   → {"name": "Église Saint-Saturnin d'Antony", "context": "XVe-XVIIIe siècles, classée monument historique. Le clocher carré est typique de l'Île-de-France."}
+
+✅ Image : cerisier en fleurs roses
+   → {"name": "Cerisier du Japon en fleurs", "context": "Prunus serrulata, son éclosion d'avril marque le hanami, la contemplation des fleurs au Japon."}
+
+✅ Image : intérieur de salon
+   → {"name": "Intérieur privé", "context": "Un coin convivial, on est plutôt chez quelqu'un que dans un commerce."}
+
+═══════════════════════════════════════════════════════
+FORMAT DE RÉPONSE OBLIGATOIRE — JSON pur, RIEN d'autre, PAS de markdown
+═══════════════════════════════════════════════════════
+
 {
-  "name": "nom EXACT du lieu (priorité absolue : nom Google Places si match)",
-  "context": "1 phrase chaleureuse (max 30 mots) : note Google si bonne, spécialité, info locale"
+  "name": "NOM précis (max 8 mots) — priorité aux noms des sources Wikipedia/OSM/Places",
+  "context": "1 phrase chaleureuse et érudite (max 35 mots) avec dates, faits, anecdotes locales si possible"
 }
 
-EXEMPLES :
-
-✅ Image : devanture chinoise rouge
-   Liste : 1. Wenzhou Xiaochi (Restaurant chinois) — 8m, 4.3★ 247 avis ; 2. Boulangerie Marie — 18m
-   → {"name": "Wenzhou Xiaochi", "context": "Resto chinois noté 4.3★ avec 247 avis — réputé pour ses raviolis vapeur et nouilles fraîches du Zhejiang."}
-
-✅ Image : vitrine boulangerie classique
-   Liste : 1. Boulangerie Marie (Boulangerie) — 5m, 4.1★ ; 2. Tabac Le Flandre — 20m
-   → {"name": "Boulangerie Marie", "context": "Boulangerie de quartier notée 4.1★, sur l'avenue de Flandre."}
-
-✅ Image : cuisine d'appartement
-   Liste : 1. Restaurant La Bonne Table — 25m (peu pertinent car intérieur)
-   → {"name": "Cuisine d'appartement", "context": "Un coin convivial — on est plutôt chez quelqu'un que dans un commerce ici."}
-
-✅ Image : Arc de Triomphe massif
-   Liste : éventuellement vide ou non pertinente
-   → {"name": "Arc de Triomphe", "context": "Le monument emblématique de l'Étoile, tu peux monter au sommet pour la vue panoramique."}
-
-Toujours en français, ton chaleureux mais concis.
+Toujours en français. Ton chaleureux mais concis. Tu es un guide local cultivé.
 
 CONTEXTE DE L'UTILISATEUR :
 ${contextLines.join('\n')}`;
