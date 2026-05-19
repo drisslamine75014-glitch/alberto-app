@@ -2972,7 +2972,7 @@ button { font-family: inherit; cursor: pointer; }
 .push-back { width: 38px; height: 38px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; color: var(--ink-2); box-shadow: var(--shadow-1); flex-shrink: 0; }
 .push-back svg { width: 16px; height: 16px; }
 .push-title { flex: 1; font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink); font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.push-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 0 calc(40px + var(--safe-bottom)); }
+.push-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 0 calc(120px + var(--safe-bottom)); }
 .push-scroll::-webkit-scrollbar { display: none; }
 
 /* MOMENT DETAIL */
@@ -4182,12 +4182,17 @@ body:has(.chat-sheet.show) .feedback-fab { display: none; }
 .chat-close-btn {
   background: var(--bg-warm);
   border: 1px solid var(--line);
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%; /* V98 : agrandi */
   display: flex; align-items: center; justify-content: center;
   color: var(--ink); cursor: pointer; flex-shrink: 0;
+  /* V98 : tap fiable */
+  position: relative;
+  z-index: 2;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(31,78,95,0.15);
 }
 .chat-close-btn:active { transform: scale(0.92); }
-.chat-close-btn svg { width: 16px; height: 16px; }
+.chat-close-btn svg { width: 16px; height: 16px; pointer-events: none; }
 
 .chat-messages {
   flex: 1;
@@ -4270,15 +4275,20 @@ body:has(.chat-sheet.show) .feedback-fab { display: none; }
 .chat-attach-btn {
   background: var(--bg-warm);
   border: 1px solid var(--line);
-  width: 40px; height: 40px;
+  width: 44px; height: 44px; /* V98 : agrandi */
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   color: var(--ink);
   cursor: pointer;
   flex-shrink: 0;
+  /* V98 : tap fiable Android */
+  position: relative;
+  z-index: 2;
+  -webkit-tap-highlight-color: rgba(199,125,60,0.2);
+  touch-action: manipulation;
 }
 .chat-attach-btn:active { transform: scale(0.92); }
-.chat-attach-btn svg { width: 18px; height: 18px; }
+.chat-attach-btn svg { width: 18px; height: 18px; pointer-events: none; }
 
 /* V95 — Menu attach (Photo / Document / Caméra / Œil) */
 .chat-attach-menu {
@@ -4349,16 +4359,27 @@ body:has(.chat-sheet.show) .feedback-fab { display: none; }
   background: var(--olive);
   color: #FFF8EE;
   border: none;
-  width: 40px; height: 40px;
+  width: 44px; height: 44px; /* V98 : un peu plus grand pour zone tap */
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
   transition: opacity 0.2s;
+  /* V98 : assure que les events arrivent bien au bouton, pas au SVG */
+  position: relative;
+  z-index: 2;
+  -webkit-tap-highlight-color: rgba(199,125,60,0.3);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.chat-send-btn:active:not(:disabled) { transform: scale(0.92); }
-.chat-send-btn svg { width: 18px; height: 18px; }
+.chat-send-btn:active:not(:disabled) { transform: scale(0.92); background: var(--olive-deep); }
+.chat-send-btn svg {
+  width: 18px; height: 18px;
+  /* V98 : SVG ne capte aucun event tactile, laisse passer au bouton */
+  pointer-events: none;
+}
 
 .chat-attach-preview {
   display: none;
@@ -7250,7 +7271,7 @@ button.map-nav-overlay svg {
     </div>
 
     <!-- V93 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v96</div>
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v98</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -9217,7 +9238,20 @@ function renderCalInline() {
   const sel = calSelectedDate || todayIso;
   const selDate = new Date(sel);
   const selMoments = getMomentsOnDate(sel);
-  let listHtml = `<div style="padding: 16px;"><div style="font-family: 'Outfit', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); font-weight: 600; margin-bottom: 10px;">${fmtLongDate(selDate)}</div>`;
+  // V97 : padding-bottom généreux pour que le bouton soit visible au-dessus de la bottom-nav
+  let listHtml = `<div style="padding: 16px 16px calc(120px + var(--safe-bottom));"><div style="font-family: 'Outfit', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-4); font-weight: 600; margin-bottom: 10px;">${fmtLongDate(selDate)}</div>`;
+
+  // V96 : Bouton "Ajouter un événement" placé en HAUT (visible immédiatement)
+  listHtml += `
+    <button class="cal-add-day" data-add-day-inline="${sel}" style="margin: 0 0 14px 0; width: 100%;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Ajouter un événement ce jour-là
+    </button>
+  `;
+
   if (selMoments.length === 0) {
     listHtml += `<div style="color: var(--ink-3); font-family: 'Fraunces', serif; font-style: italic; padding: 8px 0;">Rien de prévu ce jour-là.</div>`;
   } else {
@@ -9233,16 +9267,6 @@ function renderCalInline() {
         </div>`;
     });
   }
-  // V96 : Bouton d'ajout d'événement ce jour-là (toujours visible)
-  listHtml += `
-    <button class="cal-add-day" data-add-day-inline="${sel}" style="margin-top: 16px; margin-left: 0; margin-right: 0; width: 100%;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-      Ajouter un événement ce jour-là
-    </button>
-  `;
   listHtml += `</div>`;
 
   document.getElementById('main').innerHTML = `
@@ -9377,10 +9401,19 @@ function showCalDay(dateStr) {
   const d = new Date(dateStr);
   let html = '';
 
+  // V97 : Header + bouton "Ajouter" placé EN HAUT (toujours visible, avant la liste)
+  html = `<div class="cal-day-list-header">${fmtLongDate(d)}</div>`;
+  html += `<button class="cal-add-day" data-add-day="${dateStr}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Ajouter un événement ce jour-là
+  </button>`;
+
   if (dayMoments.length === 0) {
-    html = `<div class="cal-day-list-header">${fmtLongDate(d)}</div><div class="cal-day-list-empty">Rien ce jour-là.</div>`;
+    html += `<div class="cal-day-list-empty">Rien ce jour-là.</div>`;
   } else {
-    html = `<div class="cal-day-list-header">${fmtLongDate(d)}</div>`;
     dayMoments.forEach(m => {
       // Pour voyages multi-jours, afficher l'étape du jour
       let displayTitle = m.title;
@@ -9403,15 +9436,6 @@ function showCalDay(dateStr) {
       </div>`;
     });
   }
-
-  // Add button to add an event to this day
-  html += `<button class="cal-add-day" data-add-day="${dateStr}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"/>
-      <line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-    Ajouter un événement ce jour-là
-  </button>`;
 
   list.innerHTML = html;
   list.querySelectorAll('.upcoming-item[data-id]').forEach(el => el.addEventListener('click', () => openMoment(el.dataset.id)));
@@ -9856,7 +9880,20 @@ function initChatSheetBindings() {
   }
 
   const sendBtn = document.getElementById('chat-send-btn');
-  if (sendBtn) sendBtn.addEventListener('click', sendChatMessage);
+  if (sendBtn) {
+    // V98 : double binding click + touchend pour fiabilité Android Chrome
+    sendBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sendChatMessage();
+    });
+    // Sur certains Android le click ne fire pas si le textarea a le focus
+    sendBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      sendChatMessage();
+    }, { passive: false });
+  }
 
   const closeBtn = document.getElementById('chat-close-btn');
   if (closeBtn) closeBtn.addEventListener('click', closeChatSheet);
@@ -10441,7 +10478,7 @@ function openChatView(initialMessage) {
   }, 200);
 
   if (initialMessage) {
-    sendChatMessage(initialMessage);
+    legacySendChatMessage_DEPRECATED(initialMessage);
   }
 }
 
@@ -10456,7 +10493,9 @@ function appendChatMessage(role, content, isThinking) {
   container.scrollTop = container.scrollHeight;
 }
 
-async function sendChatMessage(text) {
+async function legacySendChatMessage_DEPRECATED(text) {
+  // V97 : Ancienne fonction du système V70 voice-sheet, renommée pour ne plus écraser
+  // la nouvelle sendChatMessage de la chat-sheet (ligne ~9675).
   if (!text || !text.trim()) return;
   text = text.trim();
 
@@ -10757,14 +10796,14 @@ document.getElementById('mode-text-submit').addEventListener('click', submitText
 // V70 : bindings chat
 document.getElementById('mode-chat-submit').addEventListener('click', () => {
   const text = document.getElementById('voice-chat-textarea').value.trim();
-  if (text) sendChatMessage(text);
+  if (text) legacySendChatMessage_DEPRECATED(text);
 });
 document.getElementById('mode-chat-close').addEventListener('click', closeVoiceSheet);
 document.getElementById('voice-chat-textarea').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     const text = e.target.value.trim();
-    if (text) sendChatMessage(text);
+    if (text) legacySendChatMessage_DEPRECATED(text);
   }
 });
 document.getElementById('voice-textarea').addEventListener('input', (e) => {
