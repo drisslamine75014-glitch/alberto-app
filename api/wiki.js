@@ -42,7 +42,8 @@ export default async function handler(req, res) {
 
     // 2. Récupère extraits + thumbnails en batch
     const pageIds = geoResults.map(r => r.pageid).join('|');
-    const detailUrl = `https://${safeLang}.wikipedia.org/w/api.php?action=query&pageids=${pageIds}&prop=extracts|pageimages|info&exintro=1&explaintext=1&exsentences=2&piprop=thumbnail&pithumbsize=200&inprop=url&format=json&origin=*`;
+    // V104 : extraits 4 phrases au lieu de 2 (plus de contexte pour Claude)
+    const detailUrl = `https://${safeLang}.wikipedia.org/w/api.php?action=query&pageids=${pageIds}&prop=extracts|pageimages|info&exintro=1&explaintext=1&exsentences=4&piprop=thumbnail&pithumbsize=300&inprop=url&format=json&origin=*`;
     const detailResp = await fetch(detailUrl);
     const detailData = detailResp.ok ? await detailResp.json() : { query: { pages: {} } };
     const pages = detailData.query?.pages || {};
