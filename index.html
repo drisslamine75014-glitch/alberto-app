@@ -4243,6 +4243,168 @@ body:has(.chat-sheet.show) .feedback-fab { display: none; }
   0%, 60%, 100% { opacity: 0.3; }
   30% { opacity: 1; }
 }
+
+/* V101 — Fiches lieux dans le chat (Place cards) */
+.chat-section-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  padding: 12px 4px 6px;
+  margin-top: 4px;
+}
+.place-card, .wiki-card {
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.place-card-photo, .wiki-card-photo {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--bg);
+  overflow: hidden;
+  position: relative;
+}
+.place-card-photo img, .wiki-card-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.place-card-photo-loading {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-4);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+}
+.place-card-body, .wiki-card-body {
+  padding: 12px 14px 14px;
+}
+.place-card-title, .wiki-card-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.place-card-meta {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.place-card-meta .place-dot { opacity: 0.5; }
+.place-rating { color: var(--olive-deep); font-weight: 600; }
+.place-open { color: #4A7A4E; font-weight: 600; }
+.place-closed { color: #9A3F3F; font-weight: 600; }
+.place-price { color: var(--ink-3); letter-spacing: 0.05em; }
+.place-card-summary {
+  font-family: 'Fraunces', serif;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.45;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+.wiki-card-meta {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.wiki-card-extract {
+  font-family: 'Fraunces', serif;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+.place-card-actions, .wiki-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.place-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.place-action-btn:active { transform: scale(0.96); }
+.place-action-btn.primary {
+  background: var(--olive);
+  color: #FFF8EE;
+  border-color: var(--olive);
+}
+
+/* V101 — Route map (mini Leaflet dans la carte) */
+.place-card-route { margin-top: 10px; }
+.place-card-route:empty { margin-top: 0; }
+.route-loading, .route-error {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 8px 0;
+}
+.route-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+.route-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.route-info strong { color: var(--olive-deep); }
+.route-open-maps {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--olive-deep);
+  text-decoration: none;
+}
+.route-map {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.route-map .leaflet-control-container { display: none; }
+
 .chat-msg-image {
   border-radius: 12px;
   max-width: 220px;
@@ -7271,7 +7433,7 @@ button.map-nav-overlay svg {
     </div>
 
     <!-- V93 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v98</div>
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v101</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -9693,6 +9855,434 @@ function hideChatAttachPreview() {
   preview.classList.remove('show');
 }
 
+// ============================================
+// V101 — RECHERCHE DE LIEUX + GUIDAGE PIÉTON (le wow effect)
+// ============================================
+
+const ROUTE_PROXY_URL = '/api/route';
+const WIKI_PROXY_URL = '/api/wiki';
+
+/**
+ * Détecte si le message utilisateur est une recherche de lieu.
+ * Retourne { kind: 'place'|'insolite', query: 'pizzeria proche' } ou null.
+ */
+function detectSearchIntent(text) {
+  if (!text || text.length < 3) return null;
+  const low = text.toLowerCase().trim();
+
+  // Patterns "insolite / touristique"
+  const insoliteRegex = /\b(insolite|caché|secret|méconnu|hidden gem|pépite|spot|originale?|truc sympa|atypique|surprenant|hors des sentiers|inhabit|merveille)\b/i;
+  if (insoliteRegex.test(low)) {
+    return { kind: 'insolite', query: text };
+  }
+
+  // Patterns "recherche de lieu" classique
+  const placePatterns = [
+    /\b(trouve|trouver|chercher|recherche)\s+(moi\s+)?(une?|des|le|la|les|du|de)?\s*\w+/i,
+    /\b(où|ou)\s+(est|sont|y\s*a|peut|puis-je|trouver|manger|boire|dormir|aller)/i,
+    /\b(pizzeria|restaurant|resto|bar|café|cafe|boulangerie|pharmacie|hôtel|hotel|supermarché|musée|musee|monument|parc)\s+(le\s+)?(plus\s+)?(proche|près|loin|sympa|bon|ouvert)/i,
+    /\b(la|le|une?|des)\s+(meilleur(e|s|es)?|bonne?s?|sympa)\s+\w+/i,
+    /\b(plus\s+proche|près\s+d['ei]\s*ici|autour\s+de\s+moi|du\s+coin|aux?\s+alentours?)/i,
+    /\b(recommandes?|conseille|propose)\s+(moi\s+)?(une?|des|un|le)/i,
+    /\b(guide\s*-?\s*moi|emmène\s*-?\s*moi|montre\s*-?\s*moi|y\s+aller|j'y\s+vais)/i
+  ];
+
+  for (const re of placePatterns) {
+    if (re.test(low)) {
+      return { kind: 'place', query: text };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Gère la recherche : Places + Wikipedia, classement, affichage de fiches riches.
+ */
+async function handleSearchIntent(intent, originalText) {
+  // 1. Récupère la position utilisateur
+  let gps = liveViewLastGps; // si l'œil a déjà été utilisé
+  if (!gps) {
+    // Demande GPS direct
+    try {
+      gps = await getQuickGps();
+    } catch (err) {
+      renderChatMessage('alberto', "J'ai besoin de ta position pour chercher autour de toi. Active la géoloc dans ton navigateur.");
+      return;
+    }
+  }
+
+  // 2. Lance les recherches en parallèle selon l'intent
+  let places = [];
+  let wikiArticles = [];
+
+  if (intent.kind === 'insolite') {
+    // Insolite : on combine Places (4.5★+) + Wikipedia (lieux historiques)
+    const [placesRes, wikiRes] = await Promise.all([
+      fetchPlacesTextSearch(originalText, gps.lat, gps.lng, 2000),
+      fetchWikiGeo(gps.lat, gps.lng, 2000, 15)
+    ]);
+    places = (placesRes || []).filter(p => (p.rating || 0) >= 4.3 && (p.ratingCount || 0) >= 20);
+    wikiArticles = wikiRes || [];
+  } else {
+    // Recherche standard
+    places = (await fetchPlacesTextSearch(originalText, gps.lat, gps.lng, 1500)) || [];
+  }
+
+  if (places.length === 0 && wikiArticles.length === 0) {
+    renderChatMessage('alberto', `Je n'ai rien trouvé d'évident pour "${originalText}" autour de toi. Tu veux que j'élargisse, ou tu changes les mots ?`);
+    return;
+  }
+
+  // 3. Scoring intelligent : proximité × popularité × note
+  places.forEach(p => {
+    p.distance = gpsDistance(gps.lat, gps.lng, p.lat, p.lng);
+    // Score : on récompense proximité, note >=4, beaucoup d'avis
+    const proxScore = Math.max(0, 1 - p.distance / 1500); // 0 à 1, 0 si >1500m
+    const ratingScore = ((p.rating || 3.5) - 3) / 2; // 0 à 1
+    const popScore = Math.min(1, Math.log10((p.ratingCount || 1) + 1) / 3); // boost popularité
+    const openBoost = p.openNow === true ? 0.2 : (p.openNow === false ? -0.3 : 0);
+    p.score = proxScore * 0.5 + ratingScore * 0.3 + popScore * 0.2 + openBoost;
+  });
+
+  // Filtre + tri
+  let filtered = places
+    .filter(p => p.distance <= 2000) // 2 km max
+    .filter(p => !p.rating || p.rating >= 3.5)
+    .filter(p => !p.ratingCount || p.ratingCount >= 5)
+    .sort((a, b) => b.score - a.score);
+
+  const top3 = filtered.slice(0, 3);
+
+  // 4. Demande à Claude un petit teasing chaleureux (1-2 phrases)
+  const intro = await callClaudeForSearchIntro(originalText, intent.kind, top3, wikiArticles, gps);
+  renderChatMessage('alberto', intro);
+
+  // 5. Affiche les fiches lieux (cartes riches dans le chat)
+  if (top3.length > 0) {
+    renderPlaceCards(top3, gps);
+  }
+
+  // 6. Si insolite, affiche aussi quelques articles Wikipedia
+  if (intent.kind === 'insolite' && wikiArticles.length > 0) {
+    const topWiki = wikiArticles
+      .filter(a => a.extract && a.extract.length > 50)
+      .slice(0, 3);
+    if (topWiki.length > 0) {
+      renderWikiCards(topWiki, gps);
+    }
+  }
+}
+
+/**
+ * Récupère la position GPS rapidement (sans attendre la haute précision).
+ */
+function getQuickGps() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Géolocalisation non supportée'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      }),
+      err => reject(err),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    );
+  });
+}
+
+/**
+ * Appelle Google Places Text Search via le proxy.
+ */
+async function fetchPlacesTextSearch(query, lat, lng, radius = 1000) {
+  try {
+    const url = `${PLACES_PROXY_URL}?op=textsearch&query=${encodeURIComponent(query)}&lat=${lat}&lng=${lng}&radius=${radius}`;
+    const headers = {};
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) {
+      headers['x-alberto-secret'] = ALBERTO_SECRET;
+    }
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return data.places || [];
+  } catch (err) {
+    console.warn('[Places textsearch] error:', err);
+    return [];
+  }
+}
+
+/**
+ * Appelle Wikipedia geosearch via le proxy.
+ */
+async function fetchWikiGeo(lat, lng, radius = 1000, limit = 10) {
+  try {
+    const url = `${WIKI_PROXY_URL}?lat=${lat}&lng=${lng}&radius=${radius}&limit=${limit}&lang=fr`;
+    const headers = {};
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) {
+      headers['x-alberto-secret'] = ALBERTO_SECRET;
+    }
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return data.articles || [];
+  } catch (err) {
+    console.warn('[Wiki] error:', err);
+    return [];
+  }
+}
+
+/**
+ * Demande à Claude un petit message d'intro chaleureux (1-2 phrases).
+ */
+async function callClaudeForSearchIntro(query, kind, top3, wikiArticles, gps) {
+  const lines = [];
+  if (kind === 'insolite') {
+    lines.push("L'utilisateur cherche un endroit insolite ou apprécié des touristes autour de lui.");
+  } else {
+    lines.push(`L'utilisateur cherche : "${query}".`);
+  }
+  if (top3.length > 0) {
+    lines.push('Voici les 3 meilleurs résultats trouvés :');
+    top3.forEach((p, i) => {
+      lines.push(`${i+1}. ${p.name} (${p.type}) — ${p.distance}m, ${p.rating || 'sans note'}★ ${p.ratingCount || 0} avis`);
+    });
+  }
+  if (wikiArticles.length > 0) {
+    lines.push('Articles Wikipedia à proximité :');
+    wikiArticles.slice(0, 3).forEach(a => lines.push(`- ${a.title} (${a.distance}m)`));
+  }
+
+  const systemPrompt = `Tu es Alberto, majordome IA chaleureux et concis. L'utilisateur cherche un lieu. Tu vas voir ci-dessous les résultats trouvés. Ta tâche : écrire UNE SEULE PHRASE d'introduction chaleureuse en français (max 20 mots), qui annonce les résultats sans les répéter en détail (ils sont déjà dans des cartes visuelles). Pas d'emojis. Tutoie.
+
+Exemples de bons intros :
+- "J'ai trouvé 3 pizzerias bien notées tout près. La première semble vraiment bien."
+- "Voilà ce qui ressort dans le coin, dont une vraie pépite à 400m."
+- "Trois bonnes options autour de toi, classées par pertinence."
+- "Petite sélection insolite — il y a même un truc historique à ne pas rater."`;
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
+
+    const response = await fetch(CLAUDE_PROXY_URL, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 100,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: lines.join('\n') }]
+      })
+    });
+    if (!response.ok) throw new Error('intro error');
+    const data = await response.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join(' ').trim();
+    return text || 'Voici ce que j\'ai trouvé près de toi.';
+  } catch (err) {
+    return 'Voici ce que j\'ai trouvé près de toi.';
+  }
+}
+
+/**
+ * Rendu des fiches lieux (cartes riches dans le chat).
+ */
+function renderPlaceCards(places, gps) {
+  const messagesEl = document.getElementById('chat-messages');
+  places.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'place-card';
+    card.dataset.placeId = p.id;
+
+    const ratingHtml = p.rating
+      ? `<span class="place-rating">★ ${p.rating.toFixed(1)}</span> <span class="place-rating-count">(${p.ratingCount || 0})</span>`
+      : '';
+    const openHtml = p.openNow === true
+      ? '<span class="place-open">Ouvert</span>'
+      : (p.openNow === false ? '<span class="place-closed">Fermé</span>' : '');
+    const priceHtml = p.priceLevel ? `<span class="place-price">${'€'.repeat(Math.min(4, parseInt(p.priceLevel) || 1))}</span>` : '';
+
+    card.innerHTML = `
+      ${p.photoRef ? `<div class="place-card-photo" data-photo-ref="${escapeAttr(p.photoRef)}"><div class="place-card-photo-loading">…</div></div>` : ''}
+      <div class="place-card-body">
+        <div class="place-card-title">${escapeAttr(p.name)}</div>
+        <div class="place-card-meta">
+          <span class="place-type">${escapeAttr(p.type || 'Lieu')}</span>
+          <span class="place-dot">·</span>
+          <span class="place-distance">${p.distance}m</span>
+          ${ratingHtml ? '<span class="place-dot">·</span>' + ratingHtml : ''}
+          ${openHtml ? '<span class="place-dot">·</span>' + openHtml : ''}
+          ${priceHtml ? '<span class="place-dot">·</span>' + priceHtml : ''}
+        </div>
+        ${p.summary ? `<div class="place-card-summary">${escapeAttr(p.summary)}</div>` : ''}
+        <div class="place-card-actions">
+          <button class="place-action-btn primary" data-action="route" data-lat="${p.lat}" data-lng="${p.lng}" data-name="${escapeAttr(p.name)}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Y aller
+          </button>
+          <button class="place-action-btn" data-action="open-maps" data-lat="${p.lat}" data-lng="${p.lng}" data-name="${escapeAttr(p.name)}">
+            Google Maps
+          </button>
+        </div>
+        <div class="place-card-route" data-route-container></div>
+      </div>
+    `;
+    messagesEl.appendChild(card);
+
+    // Charge la photo de manière asynchrone
+    if (p.photoRef) {
+      const photoEl = card.querySelector('.place-card-photo');
+      fetchPlacePhotoUrl(p.photoRef).then(url => {
+        if (url && photoEl) {
+          photoEl.innerHTML = `<img src="${url}" alt="" />`;
+        } else if (photoEl) {
+          photoEl.style.display = 'none';
+        }
+      });
+    }
+
+    // Bindings actions
+    card.querySelector('[data-action="route"]').addEventListener('click', (e) => {
+      e.preventDefault();
+      handleRouteRequest(card, gps, parseFloat(p.lat), parseFloat(p.lng), p.name);
+    });
+    card.querySelector('[data-action="open-maps"]').addEventListener('click', (e) => {
+      e.preventDefault();
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=walking`;
+      window.open(url, '_blank');
+    });
+  });
+
+  scrollChatToBottom();
+}
+
+/**
+ * Rendu des cartes Wikipedia (insolite / culture).
+ */
+function renderWikiCards(articles, gps) {
+  const messagesEl = document.getElementById('chat-messages');
+  const wikiHeader = document.createElement('div');
+  wikiHeader.className = 'chat-section-label';
+  wikiHeader.textContent = 'Aussi à proximité — coins méconnus';
+  messagesEl.appendChild(wikiHeader);
+
+  articles.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'wiki-card';
+    card.innerHTML = `
+      ${a.thumbnail ? `<div class="wiki-card-photo"><img src="${a.thumbnail}" alt="" /></div>` : ''}
+      <div class="wiki-card-body">
+        <div class="wiki-card-title">${escapeAttr(a.title)}</div>
+        <div class="wiki-card-meta">${a.distance}m</div>
+        <div class="wiki-card-extract">${escapeAttr(a.extract || '').slice(0, 200)}${a.extract && a.extract.length > 200 ? '…' : ''}</div>
+        <div class="wiki-card-actions">
+          <button class="place-action-btn primary" data-action="wiki-route" data-lat="${a.lat}" data-lng="${a.lng}" data-name="${escapeAttr(a.title)}">
+            Y aller
+          </button>
+          <a class="place-action-btn" href="${escapeAttr(a.url)}" target="_blank" rel="noopener">Lire</a>
+        </div>
+        <div class="place-card-route" data-route-container></div>
+      </div>
+    `;
+    messagesEl.appendChild(card);
+
+    card.querySelector('[data-action="wiki-route"]').addEventListener('click', (e) => {
+      e.preventDefault();
+      handleRouteRequest(card, gps, a.lat, a.lng, a.title);
+    });
+  });
+
+  scrollChatToBottom();
+}
+
+/**
+ * Calcul l'itinéraire et affiche une mini-carte Leaflet avec le tracé.
+ */
+async function handleRouteRequest(card, fromGps, toLat, toLng, destName) {
+  const container = card.querySelector('[data-route-container]');
+  if (!container) return;
+  container.innerHTML = '<div class="route-loading">Calcul de l\'itinéraire…</div>';
+
+  try {
+    const headers = {};
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
+    const url = `${ROUTE_PROXY_URL}?fromLat=${fromGps.lat}&fromLng=${fromGps.lng}&toLat=${toLat}&toLng=${toLng}&profile=foot-walking`;
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) {
+      container.innerHTML = '<div class="route-error">Itinéraire non disponible. Ouverture sur Google Maps…</div>';
+      setTimeout(() => {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${toLat},${toLng}&travelmode=walking`, '_blank');
+      }, 800);
+      return;
+    }
+    const data = await resp.json();
+    const distM = data.distanceMeters;
+    const durMin = Math.max(1, Math.round(data.durationSeconds / 60));
+
+    // Crée un id unique pour la map
+    const mapId = 'route-map-' + Math.random().toString(36).slice(2, 8);
+    container.innerHTML = `
+      <div class="route-summary">
+        <div class="route-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span><strong>${durMin} min à pied</strong> · ${distM}m</span>
+        </div>
+        <a class="route-open-maps" href="https://www.google.com/maps/dir/?api=1&destination=${toLat},${toLng}&travelmode=walking" target="_blank" rel="noopener">Naviguer →</a>
+      </div>
+      <div id="${mapId}" class="route-map"></div>
+    `;
+
+    // Init Leaflet map
+    setTimeout(() => {
+      try {
+        const map = L.map(mapId, {
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          doubleClickZoom: false,
+          scrollWheelZoom: false,
+          boxZoom: false,
+          touchZoom: false
+        });
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19
+        }).addTo(map);
+
+        // Trace la route (geojson coordinates = [lng, lat])
+        const latlngs = (data.geometry || []).map(c => [c[1], c[0]]);
+        if (latlngs.length > 0) {
+          const polyline = L.polyline(latlngs, { color: '#C77D3C', weight: 4, opacity: 0.85 }).addTo(map);
+          // Markers départ/arrivée
+          L.circleMarker([fromGps.lat, fromGps.lng], { radius: 6, color: '#1F4E5F', fillColor: '#1F4E5F', fillOpacity: 1, weight: 2 }).addTo(map);
+          L.circleMarker([toLat, toLng], { radius: 8, color: '#C77D3C', fillColor: '#C77D3C', fillOpacity: 1, weight: 2 }).addTo(map);
+          map.fitBounds(polyline.getBounds(), { padding: [16, 16] });
+        } else {
+          map.setView([toLat, toLng], 15);
+        }
+
+        // Force invalidate après init pour rendre les tuiles
+        setTimeout(() => map.invalidateSize(), 200);
+        setTimeout(() => map.invalidateSize(), 600);
+      } catch (e) {
+        console.warn('Leaflet init failed:', e);
+      }
+    }, 50);
+
+    scrollChatToBottom();
+  } catch (err) {
+    console.error('Route error:', err);
+    container.innerHTML = '<div class="route-error">Erreur de calcul. Ouvre directement Google Maps.</div>';
+  }
+}
+
 async function sendChatMessage() {
   if (abChatThinking) return;
   const input = document.getElementById('chat-input');
@@ -9703,10 +10293,8 @@ async function sendChatMessage() {
   let effectiveText = text;
   if (abChatPendingDoc) {
     if (abChatPendingDoc.text) {
-      // Document texte : on l'injecte directement
       effectiveText = `[Document joint : ${abChatPendingDoc.name}]\n\n${abChatPendingDoc.text}\n\n${text}`;
     } else if (abChatPendingDoc.type === 'application/pdf') {
-      // PDF : on l'envoie comme pièce jointe (Claude supporte les PDF nativement)
       effectiveText = text || `Voici un document (${abChatPendingDoc.name}). Peux-tu m'aider avec ?`;
     }
   }
@@ -9725,7 +10313,25 @@ async function sendChatMessage() {
   abChatPendingDoc = null;
   updateChatSendBtn();
 
-  // Appel Claude
+  // V101 : Détection d'intent "recherche de lieu" — court-circuite Claude pour utiliser Places direct
+  const searchIntent = detectSearchIntent(text);
+  if (searchIntent && !imageToSend && !docToSend) {
+    abChatThinking = true;
+    showChatThinking();
+    document.getElementById('chat-header-status').textContent = 'cherche autour de toi…';
+    try {
+      await handleSearchIntent(searchIntent, text);
+    } catch (err) {
+      console.error('Search error:', err);
+      renderChatMessage('alberto', "Je n'ai pas réussi à chercher pour toi. Réessaie ou demande-moi autrement.");
+    }
+    hideChatThinking();
+    abChatThinking = false;
+    document.getElementById('chat-header-status').textContent = 'en ligne';
+    return;
+  }
+
+  // Appel Claude classique
   abChatThinking = true;
   showChatThinking();
   document.getElementById('chat-header-status').textContent = 'écrit…';
@@ -14915,7 +15521,7 @@ function getCurrentPositionPromise() {
 }
 
 // V78 : Reverse geocoding via Nominatim (OpenStreetMap) — gratuit, pas de clé requise
-async function reverseGeocode(lat, lng) {
+async function reverseGeocode(lat, lng, accuracyMeters) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr&zoom=18`;
     const resp = await fetch(url, {
@@ -14923,25 +15529,114 @@ async function reverseGeocode(lat, lng) {
     });
     if (!resp.ok) return null;
     const data = await resp.json();
-    // data.display_name = adresse complète
-    // data.address = objet structuré
     const addr = data.address || {};
-    // Construit une adresse lisible courte
+
+    // V99 : Si GPS imprécis (>20m), on N'AFFICHE PAS le numéro de rue
+    // (Nominatim interpole entre les bornes connues, donc un numéro précis avec GPS flou
+    //  est une fausse info qui place l'utilisateur chez le mauvais commerce)
+    const isImprecise = !accuracyMeters || accuracyMeters > 20;
+
     const parts = [];
-    if (addr.house_number && addr.road) parts.push(`${addr.house_number} ${addr.road}`);
-    else if (addr.road) parts.push(addr.road);
+    if (addr.house_number && addr.road && !isImprecise) {
+      parts.push(`${addr.house_number} ${addr.road}`);
+    } else if (addr.road) {
+      parts.push(addr.road);
+    }
     if (addr.neighbourhood || addr.suburb) parts.push(addr.neighbourhood || addr.suburb);
     if (addr.city || addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
+
+    // Suffixe précision si imprécis
+    let short = parts.join(', ') || data.display_name?.split(',').slice(0, 3).join(', ') || 'Adresse inconnue';
+    if (isImprecise && accuracyMeters) {
+      short += ` (~${Math.round(accuracyMeters)}m près)`;
+    }
+
     return {
-      short: parts.join(', ') || data.display_name?.split(',').slice(0, 3).join(', ') || 'Adresse inconnue',
+      short: short,
       full: data.display_name || '',
       city: addr.city || addr.town || addr.village || addr.county || '',
-      country: addr.country || ''
+      country: addr.country || '',
+      // V99 : on stocke les infos brutes pour Claude
+      houseNumber: addr.house_number || null,
+      road: addr.road || null,
+      accuracy: accuracyMeters || null,
+      isImprecise: isImprecise
     };
   } catch (err) {
     console.error('Reverse geocode error:', err);
     return null;
   }
+}
+
+// ============================================
+// V100 — GOOGLE PLACES : récupère les commerces voisins pour précision maximale
+// ============================================
+
+const PLACES_PROXY_URL = '/api/places';
+
+/**
+ * Récupère les commerces dans un rayon autour d'un point GPS.
+ * @param {number} lat - latitude
+ * @param {number} lng - longitude
+ * @param {number} radius - rayon en mètres (défaut 40, max 100)
+ * @returns {Promise<Array>} - liste de lieux {id, name, type, address, lat, lng, rating, ratingCount, photoRef}
+ */
+async function fetchNearbyPlaces(lat, lng, radius = 40) {
+  try {
+    const url = `${PLACES_PROXY_URL}?op=nearby&lat=${lat}&lng=${lng}&radius=${radius}`;
+    const headers = {};
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) {
+      headers['x-alberto-secret'] = ALBERTO_SECRET;
+    }
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      console.warn('[Places] error', resp.status, errData);
+      return [];
+    }
+    const data = await resp.json();
+    return data.places || [];
+  } catch (err) {
+    console.warn('[Places] fetchNearbyPlaces failed:', err);
+    return [];
+  }
+}
+
+/**
+ * Récupère la photo d'un lieu via le proxy.
+ * @param {string} photoRef - référence Google Places (places/{placeId}/photos/{photoId})
+ * @returns {Promise<string|null>} - URL de la photo
+ */
+async function fetchPlacePhotoUrl(photoRef) {
+  if (!photoRef) return null;
+  try {
+    const url = `${PLACES_PROXY_URL}?op=photo&photoRef=${encodeURIComponent(photoRef)}&maxSize=400`;
+    const headers = {};
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) {
+      headers['x-alberto-secret'] = ALBERTO_SECRET;
+    }
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.photoUri || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Calcule la distance entre 2 points GPS (formule haversine simplifiée pour courtes distances).
+ * @returns distance en mètres
+ */
+function gpsDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000; // rayon terre en mètres
+  const toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLng/2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
 // V86 : Watchdog — s'assure que le titre du compact n'est JAMAIS vide
@@ -15053,19 +15748,37 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
   // Stocke la position pour le swipe Google Maps
   liveViewLastGps = gps;
 
-  // 3. V90 : RÉCUPÈRE L'ADRESSE AVANT D'APPELER CLAUDE
-  // C'est le cœur de la valeur : Claude doit savoir OÙ on est (nom du lieu),
-  // pas juste les coordonnées chiffrées qu'il ne sait pas décoder.
+  // 3. V90/V100 : RÉCUPÈRE L'ADRESSE + LES COMMERCES VOISINS EN PARALLÈLE
+  // Reverse geocoding (OSM) donne l'adresse postale.
+  // Google Places (V100) donne la liste précise des commerces dans 40m avec leurs noms officiels.
+  // C'est LE moat : Claude croise visuel + liste de candidats → identifie le bon commerce.
   let address = null;
+  let nearbyPlaces = [];
   if (gps) {
     try {
-      address = await reverseGeocode(gps.lat, gps.lng);
+      const [addrResult, placesResult] = await Promise.all([
+        reverseGeocode(gps.lat, gps.lng, gps.accuracy),
+        fetchNearbyPlaces(gps.lat, gps.lng, 40) // 40m de rayon
+      ]);
+      address = addrResult;
+      nearbyPlaces = placesResult || [];
     } catch (err) {
-      console.warn('Reverse geocoding échoué:', err);
+      console.warn('Géolocalisation enrichie échouée:', err);
     }
   }
 
-  // 4. V90 : Construit un prompt système ENRICHI avec l'adresse réelle
+  // Tri des lieux par distance au point GPS
+  if (nearbyPlaces.length > 0 && gps) {
+    nearbyPlaces = nearbyPlaces
+      .map(p => ({
+        ...p,
+        distance: gpsDistance(gps.lat, gps.lng, p.lat, p.lng)
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 10); // top 10 plus proches
+  }
+
+  // 4. V90/V100 : Construit un prompt système enrichi
   const contextLines = [];
 
   if (voyActive) {
@@ -15073,46 +15786,85 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
   }
 
   if (address) {
-    // V90 : on donne à Claude le nom du lieu en clair, pas juste les coordonnées
     const parts = [];
     if (address.short) parts.push(address.short);
     if (address.city && !address.short.includes(address.city)) parts.push(address.city);
     if (address.country) parts.push(address.country);
-    contextLines.push(`L'utilisateur se trouve physiquement à : ${parts.join(', ')}.`);
-    contextLines.push(`Coordonnées GPS exactes : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
-    contextLines.push(`Utilise cette localisation pour identifier précisément ce que l'utilisateur regarde. Si l'image montre un monument, place ou bâtiment célèbre cohérent avec cette adresse, nomme-le exactement.`);
+    contextLines.push(`Position approximative : ${parts.join(', ')}.`);
+    contextLines.push(`Coordonnées GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m).`);
   } else if (gps) {
     contextLines.push(`Position GPS : ${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)} (précision ~${Math.round(gps.accuracy)}m, adresse non récupérée).`);
   } else {
     contextLines.push(`Position GPS : non disponible.${gpsError ? ' Raison : ' + gpsError : ''}`);
   }
 
-  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone, et tu connais sa position exacte.
+  // V100 : Ajoute la liste précise des commerces voisins
+  if (nearbyPlaces.length > 0) {
+    contextLines.push('');
+    contextLines.push(`COMMERCES ET LIEUX RÉELS AUTOUR DE L'UTILISATEUR (par ordre de proximité, source Google Places) :`);
+    nearbyPlaces.forEach((p, i) => {
+      const typeStr = p.type ? ` (${p.type})` : '';
+      const ratingStr = p.rating ? `, ${p.rating}★ ${p.ratingCount} avis` : '';
+      contextLines.push(`${i + 1}. ${p.name}${typeStr} — à ${p.distance}m${ratingStr}`);
+    });
+    contextLines.push('');
+    contextLines.push(`INSTRUCTION CRITIQUE : l'un de ces lieux est CERTAINEMENT ce que regarde l'utilisateur. Croise visuellement l'image avec cette liste et identifie le bon. Si tu vois une vitrine de boulangerie et qu'il y a une boulangerie dans la liste → c'est celle-là, nomme-la précisément. Si tu vois un restaurant chinois et qu'il y a un resto chinois dans la liste → c'est lui.`);
+  }
 
-Ton rôle : identifier en 1 phrase ce que l'utilisateur regarde, en CROISANT systématiquement l'image avec sa localisation. Tu es un guide local intelligent, pas un détecteur d'objets aveugle.
+  // Stocke la liste pour usage ultérieur (album, chat, etc.)
+  liveViewLastNearbyPlaces = nearbyPlaces;
 
-Méthode de raisonnement :
-1. Analyse ce que tu vois dans l'image (forme, style, contexte visuel)
-2. Croise avec la localisation : quels lieux célèbres, monuments, quartiers, restaurants, commerces se trouvent à cette adresse ?
-3. Si l'image correspond clairement à un lieu connu à cette position → nomme-le précisément
-4. Sinon, décris factuellement ce que tu vois
+  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone, et tu disposes d'une LISTE PRÉCISE des commerces et lieux qui sont physiquement autour de lui (issue de Google Places, donc fiable).
 
-Style de réponse OBLIGATOIRE — réponds en JSON pur, RIEN d'autre, pas de balises markdown :
+MÉTHODE OBLIGATOIRE — c'est ton avantage compétitif :
+
+1. ANALYSE L'IMAGE
+   - Type de lieu (restaurant, boulangerie, café, monument, etc.)
+   - Cuisine / spécialité si visible (chinois, italien, etc.)
+   - Enseignes lisibles, devanture, couleurs, style
+   - Détails distinctifs (devanture rouge, tables en terrasse, vitrine bombée, etc.)
+
+2. CROISE AVEC LA LISTE GOOGLE PLACES
+   - La liste contient les 10 lieux les plus proches avec noms réels, types et distances
+   - L'un d'eux est CERTAINEMENT ce qu'on regarde (sauf si on regarde dans un appartement privé)
+   - Choisis le candidat qui matche : type cohérent + distance courte + plausibilité visuelle
+   - Si plusieurs candidats du même type → privilégie le plus proche
+
+3. SOIS PRÉCIS DANS LA RÉPONSE
+   - Donne le NOM EXACT du commerce (depuis la liste Google), pas un nom générique
+   - Mentionne la note si bonne (4+★)
+   - Si tu n'es pas SÛR, indique-le ("vraisemblablement [nom]" ou "soit X soit Y")
+
+4. CAS PARTICULIERS
+   - Si image dans un appartement / lieu privé → décris factuellement, n'utilise pas la liste
+   - Si liste vide ou hors ville → ton mode habituel (description directe)
+   - Si paysage / monument célèbre → reconnais-le même hors liste
+
+Format de réponse OBLIGATOIRE — JSON pur, RIEN d'autre, pas de markdown :
 {
-  "name": "nom court du lieu/objet/scène (max 5 mots)",
-  "context": "1 phrase de contexte chaleureux qui exploite la localisation (max 20 mots) — anecdote locale, info historique, conseil de coin"
+  "name": "nom EXACT du lieu (priorité absolue : nom Google Places si match)",
+  "context": "1 phrase chaleureuse (max 30 mots) : note Google si bonne, spécialité, info locale"
 }
 
-Exemples de bon raisonnement :
-- Image : arche en pierre + GPS Place de l'Étoile, Paris → "name": "Arc de Triomphe", "context": "Le monument emblématique des Champs-Élysées, tu peux monter au sommet pour la vue."
-- Image : vieille église romane + GPS Conques, Aveyron → "name": "Abbatiale Sainte-Foy", "context": "Étape majeure du chemin de Compostelle depuis le 11e siècle."
-- Image : intérieur cuisine + GPS résidentiel Antony → "name": "Cuisine moderne", "context": "Un coin convivial typique des appartements de banlieue parisienne."
-- Image : bord de mer rochers blancs + GPS Étretat → "name": "Falaises d'Étretat", "context": "L'aiguille creuse qui a inspiré Monet et Maupassant."
+EXEMPLES :
 
-Règles strictes :
-- JAMAIS d'invention : si l'image et la position ne matchent pas, dis ce que tu vois sans forcer
-- Si tu ne reconnais aucun lieu précis, sois honnête ("Rue résidentielle", "Intérieur d'appartement")
-- Toujours en français, ton chaleureux mais concis
+✅ Image : devanture chinoise rouge
+   Liste : 1. Wenzhou Xiaochi (Restaurant chinois) — 8m, 4.3★ 247 avis ; 2. Boulangerie Marie — 18m
+   → {"name": "Wenzhou Xiaochi", "context": "Resto chinois noté 4.3★ avec 247 avis — réputé pour ses raviolis vapeur et nouilles fraîches du Zhejiang."}
+
+✅ Image : vitrine boulangerie classique
+   Liste : 1. Boulangerie Marie (Boulangerie) — 5m, 4.1★ ; 2. Tabac Le Flandre — 20m
+   → {"name": "Boulangerie Marie", "context": "Boulangerie de quartier notée 4.1★, sur l'avenue de Flandre."}
+
+✅ Image : cuisine d'appartement
+   Liste : 1. Restaurant La Bonne Table — 25m (peu pertinent car intérieur)
+   → {"name": "Cuisine d'appartement", "context": "Un coin convivial — on est plutôt chez quelqu'un que dans un commerce ici."}
+
+✅ Image : Arc de Triomphe massif
+   Liste : éventuellement vide ou non pertinente
+   → {"name": "Arc de Triomphe", "context": "Le monument emblématique de l'Étoile, tu peux monter au sommet pour la vue panoramique."}
+
+Toujours en français, ton chaleureux mais concis.
 
 CONTEXTE DE L'UTILISATEUR :
 ${contextLines.join('\n')}`;
@@ -15121,7 +15873,7 @@ ${contextLines.join('\n')}`;
     role: 'user',
     content: [
       { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
-      { type: 'text', text: 'Qu\'est-ce que je vois exactement, en croisant l\'image avec ma localisation ? Réponds en JSON pur.' }
+      { type: 'text', text: 'Identifie EXACTEMENT ce que je regarde en croisant l\'image avec la liste Google Places ci-dessus. Utilise le nom officiel du commerce de la liste si la correspondance est évidente. Réponds en JSON pur.' }
     ]
   };
 
@@ -15219,6 +15971,7 @@ ${contextLines.join('\n')}`;
 // V78 : Stockage analyse + GPS pour réutilisation (swipe vers map)
 let liveViewLastAnalysis = null;
 let liveViewLastGps = null;
+let liveViewLastNearbyPlaces = []; // V100 : commerces autour
 // V79 : Promise GPS lancée dès l'ouverture (pour rester dans le user gesture)
 let liveViewGpsPromise = null;
 
