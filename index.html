@@ -3071,9 +3071,18 @@ button { font-family: inherit; cursor: pointer; }
 }
 .cal-cell.today .cal-cell-num { color: #FFF8EE; }
 .cal-cell.selected {
+  /* V96 : sélection beaucoup plus visible */
   border-color: var(--olive);
   border-width: 2px;
   padding: 3px 4px 3px;
+  background: var(--olive-tint);
+  box-shadow: 0 0 0 2px rgba(199,125,60,0.15);
+}
+.cal-cell.today.selected {
+  /* Si today + selected : on ajoute juste une bordure dorée plus marquée */
+  border-color: var(--olive);
+  border-width: 2.5px;
+  padding: 2.5px 3.5px 2.5px;
 }
 .cal-cell-num {
   font-family: 'Fraunces', serif;
@@ -3322,6 +3331,323 @@ button { font-family: inherit; cursor: pointer; }
   40% { opacity: 1; }
 }
 
+/* V93 — Galerie Souvenirs */
+.souvenirs-list { padding: 8px 16px 32px; }
+
+/* V94 — Bouton Album narratif */
+.album-generate-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--olive) 0%, #B4682E 100%);
+  color: #FFF8EE;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(199,125,60,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.album-generate-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 6px rgba(199,125,60,0.25);
+}
+
+/* V94 — Album overlay */
+#album-overlay {
+  position: fixed; inset: 0; z-index: 300;
+}
+.album-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(15,20,16,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.album-modal {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.album-modal-full {
+  /* Plein écran sur mobile */
+}
+.album-close {
+  position: absolute;
+  top: calc(12px + var(--safe-top));
+  right: 12px;
+  z-index: 10;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,248,238,0.95);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.album-close:active { transform: scale(0.92); }
+.album-close svg { width: 18px; height: 18px; }
+
+.album-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(60px + var(--safe-top)) 22px calc(40px + var(--safe-bottom));
+}
+.album-eyebrow {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--olive-deep);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.album-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+.album-body { margin-bottom: 28px; }
+.album-paragraph {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0 0 18px;
+}
+.album-photo-wrap {
+  margin: 22px 0;
+}
+.album-photo {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+}
+.album-photo-caption {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
+  margin-top: 8px;
+  font-style: italic;
+}
+.album-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 24px;
+}
+.album-photos-grid-item {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.album-footer {
+  padding: 18px 0 0;
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  text-align: center;
+}
+.album-footer-signature {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.album-footer-signature em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--olive-deep);
+  font-weight: 500;
+}
+.album-actions {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 24px;
+}
+.album-action-btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--bg-warm);
+  color: var(--ink);
+}
+.album-action-btn.primary {
+  background: var(--olive);
+  color: #FFF8EE;
+  border-color: var(--olive);
+}
+.album-action-btn.secondary {
+  background: transparent;
+  color: var(--ink-3);
+  border-color: var(--line);
+  font-style: italic;
+}
+.album-action-btn:active { transform: scale(0.97); }
+
+/* Album loading */
+.album-loading {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+.album-loading-icon { margin-bottom: 22px; }
+.album-loading-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.album-loading-sub {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-bottom: 20px;
+}
+.album-loading-dots {
+  display: flex; gap: 6px;
+}
+.album-loading-dots span {
+  width: 8px; height: 8px;
+  background: var(--olive);
+  border-radius: 50%;
+  animation: albumBlink 1.4s infinite;
+}
+.album-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.album-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes albumBlink {
+  0%, 60%, 100% { opacity: 0.3; }
+  30% { opacity: 1; }
+}
+
+.souvenirs-day-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--olive-deep);
+  padding: 16px 4px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+.souvenirs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px; margin-bottom: 18px;
+}
+.souvenir-card {
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden; text-align: left; cursor: pointer;
+  padding: 0; display: flex; flex-direction: column;
+  transition: transform 0.15s;
+}
+.souvenir-card:active { transform: scale(0.97); }
+.souvenir-thumb {
+  width: 100%; aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--bg-warm); display: block;
+}
+.souvenir-thumb-mark {
+  width: 100%; aspect-ratio: 1;
+  background: var(--olive-tint);
+  display: flex; align-items: center; justify-content: center;
+}
+.souvenir-info { padding: 8px 10px 10px; }
+.souvenir-title {
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-weight: 600; font-size: 13px; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.2;
+}
+.souvenir-meta {
+  font-family: 'Outfit', sans-serif; font-size: 10.5px;
+  color: var(--ink-3); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+#souvenir-preview-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+}
+.souvenir-preview-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
+.souvenir-preview-modal {
+  position: relative; background: var(--bg);
+  border-radius: 18px;
+  max-width: 92vw; max-height: 88vh;
+  overflow: hidden; display: flex; flex-direction: column;
+  z-index: 501;
+}
+.souvenir-preview-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0,0,0,0.5); color: #FFF8EE;
+  border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 10;
+}
+.souvenir-preview-close svg { width: 18px; height: 18px; }
+.souvenir-preview-img {
+  width: 100%; max-height: 50vh;
+  object-fit: contain; display: block; background: #000;
+}
+.souvenir-preview-mark {
+  padding: 60px 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--olive-deep); background: var(--olive-tint);
+}
+.souvenir-preview-body { padding: 18px 22px 22px; }
+.souvenir-preview-title {
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-weight: 600; font-size: 22px;
+  color: var(--ink); line-height: 1.2; margin-bottom: 6px;
+}
+.souvenir-preview-context {
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  color: var(--ink-2); line-height: 1.45; margin-bottom: 10px;
+}
+.souvenir-preview-addr {
+  font-family: 'Outfit', sans-serif; font-size: 13px;
+  color: var(--olive-deep); font-weight: 600; margin-bottom: 6px;
+}
+.souvenir-preview-time {
+  font-family: 'Outfit', sans-serif; font-size: 11.5px;
+  color: var(--ink-3); text-transform: capitalize; margin-bottom: 14px;
+}
+.souvenir-preview-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.souvenir-preview-btn {
+  flex: 1; min-width: 100px;
+  background: var(--ink); color: #FFF8EE;
+  border: none; border-radius: 99px;
+  padding: 10px 14px;
+  font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 12.5px;
+  cursor: pointer;
+}
+.souvenir-preview-btn:active { transform: scale(0.96); }
+.souvenir-preview-btn.secondary {
+  background: transparent; color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+.souvenir-preview-btn.danger {
+  background: transparent; color: #8B2D2D;
+  border: 1.5px solid #8B2D2D;
+}
+
 /* V71 : FEEDBACK FAB + SHEET */
 .feedback-fab {
   position: fixed;
@@ -3344,6 +3670,8 @@ button { font-family: inherit; cursor: pointer; }
 }
 .feedback-fab:active { transform: scale(0.92); }
 .feedback-fab svg { width: 20px; height: 20px; }
+/* V92 : cacher le feedback fab quand le chat est ouvert */
+body:has(.chat-sheet.show) .feedback-fab { display: none; }
 .feedback-fab-badge {
   position: absolute;
   top: -4px;
@@ -3803,20 +4131,11 @@ button { font-family: inherit; cursor: pointer; }
 
 /* VOICE SHEET — listening state */
 .voice-sheet {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--bg);
-  border-top-left-radius: 24px; border-top-right-radius: 24px;
-  z-index: 210;
-  transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1);
-  box-shadow: 0 -12px 40px rgba(15,42,53,0.2);
-  max-width: 480px; margin: 0 auto;
-  padding-bottom: calc(20px + var(--safe-bottom));
-  max-height: 90vh;
-  display: flex; flex-direction: column;
-  pointer-events: none;
+  /* V95 : voice-sheet désactivée. Conservée dans le DOM pour compat,
+     mais ne s'affichera jamais. Tous les appels ont été redirigés vers chat-sheet. */
+  display: none !important;
 }
-.voice-sheet.show { transform: translateY(0); pointer-events: auto; }
+.voice-sheet.show { display: none !important; }
 
 /* V91 : Chat sheet — discussion conversationnelle avec Alberto */
 .chat-sheet {
@@ -3960,6 +4279,56 @@ button { font-family: inherit; cursor: pointer; }
 }
 .chat-attach-btn:active { transform: scale(0.92); }
 .chat-attach-btn svg { width: 18px; height: 18px; }
+
+/* V95 — Menu attach (Photo / Document / Caméra / Œil) */
+.chat-attach-menu {
+  position: absolute;
+  bottom: calc(64px + var(--safe-bottom));
+  left: 12px;
+  background: var(--bg-warm);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  min-width: 220px;
+  box-shadow: 0 8px 28px rgba(15,42,53,0.15);
+  z-index: 220;
+}
+.chat-attach-menu.show {
+  display: flex;
+  animation: chatAttachMenuIn 0.18s cubic-bezier(0.2,0.8,0.2,1);
+}
+@keyframes chatAttachMenuIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.chat-attach-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  text-align: left;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.chat-attach-menu-item:active { background: var(--line-light); }
+.chat-attach-menu-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--olive-deep);
+  flex-shrink: 0;
+}
+.chat-attach-menu-icon svg {
+  width: 16px; height: 16px;
+}
 .chat-input {
   flex: 1;
   background: var(--bg-warm);
@@ -4352,21 +4721,25 @@ button { font-family: inherit; cursor: pointer; }
   border-color: var(--sea-deep);
 }
 
-/* "Ajouter ce jour-là" in calendar */
+/* "Ajouter ce jour-là" in calendar — V96 : plus visible avec accent doré */
 .cal-add-day {
-  margin: 12px 16px 0;
+  margin: 16px 16px 24px;
   padding: 14px 16px;
-  background: var(--surface);
-  border: 1px dashed var(--line-2);
+  background: var(--olive);
+  border: none;
   border-radius: var(--radius);
-  color: var(--sea-deep);
+  color: #FFF8EE;
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 14px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: calc(100% - 32px);
+  box-shadow: 0 2px 8px rgba(199,125,60,0.25);
 }
-.cal-add-day:active { background: var(--bg-warm); }
+.cal-add-day:active {
+  background: var(--olive-deep);
+  transform: scale(0.98);
+}
 .cal-add-day svg { width: 16px; height: 16px; }
 
 /* "Nouveau voyage" CTA in Voyage tab */
@@ -6417,6 +6790,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 .live-view-side-btn svg { width: 22px; height: 22px; max-width: 22px; max-height: 22px; }
 .live-view-side-btn:active { transform: scale(0.92); }
+/* V92 : Placeholder invisible pour garder l'alignement central du bouton capture */
+.live-view-side-btn-placeholder {
+  width: 52px; height: 52px;
+  visibility: hidden;
+}
 .live-view-capture-btn {
   position: relative;
   width: 76px; height: 76px;
@@ -6871,8 +7249,8 @@ button.map-nav-overlay svg {
       <div class="live-view-scope-corner br"></div>
     </div>
 
-    <!-- V91 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v91</div>
+    <!-- V93 : Badge version pour vérifier le déploiement -->
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v96</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -6929,12 +7307,8 @@ button.map-nav-overlay svg {
 
     <!-- Bouton capture central (œil) -->
     <div class="live-view-bottom">
-      <button class="live-view-side-btn" id="live-view-voice-btn" aria-label="Parler à Alberto">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="3" width="6" height="12" rx="3"/>
-          <path d="M5 11a7 7 0 0014 0M12 18v3"/>
-        </svg>
-      </button>
+      <!-- V92 : Bouton micro 🎤 supprimé (voix retirée en V1) -->
+      <div class="live-view-side-btn-placeholder" aria-hidden="true"></div>
       <div class="live-view-capture-wrap">
         <button class="live-view-capture-btn" id="live-view-capture-btn" aria-label="Marquer présent">
           <div class="live-view-capture-ring"></div>
@@ -6942,11 +7316,14 @@ button.map-nav-overlay svg {
         </button>
         <div class="live-view-capture-hint">Tap : photo · Long : sans photo</div>
       </div>
-      <button class="live-view-side-btn" id="live-view-write-btn" aria-label="Écrire à Alberto">
+      <!-- V92 : Ce bouton ouvre maintenant le chat avec Alberto (avec contexte de l'analyse) -->
+      <button class="live-view-side-btn" id="live-view-write-btn" aria-label="Discuter avec Alberto">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/>
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
         </svg>
       </button>
+      <!-- V92 : Ancien bouton caché pour ne pas casser le JS -->
+      <button id="live-view-voice-btn" style="display:none;" aria-hidden="true"></button>
     </div>
 
     <!-- V87 : Ancienne mini-map résiduelle supprimée (bloquait les taps !) -->
@@ -7179,6 +7556,49 @@ button.map-nav-overlay svg {
     </button>
   </div>
 
+  <!-- V95 : Menu attach popup (apparaît au tap sur +) -->
+  <div class="chat-attach-menu" id="chat-attach-menu">
+    <button class="chat-attach-menu-item" id="chat-attach-photo">
+      <span class="chat-attach-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+      </span>
+      <span>Photo de la galerie</span>
+    </button>
+    <button class="chat-attach-menu-item" id="chat-attach-camera">
+      <span class="chat-attach-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </span>
+      <span>Prendre une photo</span>
+    </button>
+    <button class="chat-attach-menu-item" id="chat-attach-doc">
+      <span class="chat-attach-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </span>
+      <span>Document (PDF, texte)</span>
+    </button>
+    <button class="chat-attach-menu-item" id="chat-attach-eye">
+      <span class="chat-attach-menu-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </span>
+      <span>Ouvrir l'œil (caméra live)</span>
+    </button>
+  </div>
+
   <div class="chat-input-bar">
     <button class="chat-attach-btn" id="chat-attach-btn" aria-label="Joindre">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -7187,6 +7607,8 @@ button.map-nav-overlay svg {
       </svg>
     </button>
     <input type="file" id="chat-file-input" accept="image/*" style="display:none;" />
+    <input type="file" id="chat-file-input-camera" accept="image/*" capture="environment" style="display:none;" />
+    <input type="file" id="chat-file-input-doc" accept=".pdf,.txt,.doc,.docx,application/pdf,text/plain" style="display:none;" />
     <textarea class="chat-input" id="chat-input" rows="1" placeholder="Écris à Alberto…"></textarea>
     <button class="chat-send-btn" id="chat-send-btn" aria-label="Envoyer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -8766,7 +9188,7 @@ function renderCalInline() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayIso;
-    const isSelected = dateStr === calSelectedDate && !isToday;
+    const isSelected = dateStr === calSelectedDate; // V96 : today peut aussi être sélectionné
     const dayMoments = getMomentsOnDate(dateStr).sort((a,b) => (b.fort ? 1 : 0) - (a.fort ? 1 : 0));
     const visible = dayMoments.slice(0, 2);
     const more = dayMoments.length - visible.length;
@@ -8811,6 +9233,16 @@ function renderCalInline() {
         </div>`;
     });
   }
+  // V96 : Bouton d'ajout d'événement ce jour-là (toujours visible)
+  listHtml += `
+    <button class="cal-add-day" data-add-day-inline="${sel}" style="margin-top: 16px; margin-left: 0; margin-right: 0; width: 100%;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Ajouter un événement ce jour-là
+    </button>
+  `;
   listHtml += `</div>`;
 
   document.getElementById('main').innerHTML = `
@@ -8851,6 +9283,26 @@ function renderCalInline() {
   document.querySelectorAll('.upcoming-item[data-id]').forEach(el => {
     el.addEventListener('click', () => openMoment(el.dataset.id));
   });
+  // V96 : Bouton "Ajouter un événement ce jour-là" dans le calendrier inline
+  const addInlineBtn = document.querySelector('[data-add-day-inline]');
+  if (addInlineBtn) {
+    addInlineBtn.addEventListener('click', () => {
+      const targetDate = addInlineBtn.dataset.addDayInline;
+      const d = new Date(targetDate);
+      const dateLabel = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+      const dateLong = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      openChatSheet({
+        fresh: true,
+        contextHint: {
+          title: `Événement le ${dateLabel}`,
+          context: `L'utilisateur veut ajouter un événement le ${dateLong}.`,
+          address: dateLabel
+        },
+        intro: `On ajoute quoi le ${dateLabel} ? Dis-moi en quelques mots — quoi, qui, vers quelle heure.`
+      });
+      window.pendingEventDate = targetDate;
+    });
+  }
 }
 
 function closeCal() { document.getElementById('cal-view').classList.remove('open'); }
@@ -8882,7 +9334,7 @@ function renderCal() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calYear}-${String(calMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayIso;
-    const isSelected = dateStr === calSelectedDate && !isToday;
+    const isSelected = dateStr === calSelectedDate; // V96 : today peut aussi être sélectionné
     const dayMoments = getMomentsOnDate(dateStr).sort((a,b) => (b.fort ? 1 : 0) - (a.fort ? 1 : 0));
 
     // Max 2 mini titles visible, +N more
@@ -8966,21 +9418,23 @@ function showCalDay(dateStr) {
   const addDayBtn = list.querySelector('[data-add-day]');
   if (addDayBtn) {
     addDayBtn.addEventListener('click', () => {
-      // Close calendar view first to avoid stacking context conflicts
+      // V96 : on ouvre le chat Alberto avec un contexte de date plutôt qu'un formulaire
       closeCal();
-      // Open plan sheet with pre-filled date
       setTimeout(() => {
-        openCaptureSheet('plan');
-        captureDate = dateStr;
-        setTimeout(() => {
-          const dateLabel = document.getElementById('field-date-label');
-          const dateBtn = document.getElementById('field-date');
-          if (dateLabel && dateBtn) {
-            const d = new Date(dateStr);
-            dateLabel.textContent = fmtRelativeFuture(d);
-            dateBtn.classList.add('has-value');
-          }
-        }, 100);
+        const d = new Date(dateStr);
+        const dateLabel = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        const dateLong = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        openChatSheet({
+          fresh: true,
+          contextHint: {
+            title: `Événement le ${dateLabel}`,
+            context: `L'utilisateur veut ajouter un événement le ${dateLong}.`,
+            address: dateLabel
+          },
+          intro: `On ajoute quoi le ${dateLabel} ? Dis-moi en quelques mots — quoi, qui, vers quelle heure.`
+        });
+        // Mémorise la date cible pour quand on créera l'événement à la fin de l'échange
+        window.pendingEventDate = dateStr;
       }, 300);
     });
   }
@@ -9091,12 +9545,17 @@ function initVoiceRecognition() {
 let abChatHistory = []; // {role: 'user'|'alberto', content: str, image?: base64, contextInfo?: str}
 let abChatPendingImage = null; // base64 de l'image en attente d'envoi
 let abChatPendingImageLabel = null;
+let abChatPendingDoc = null; // V95 : document attaché (PDF base64 ou texte)
 let abChatThinking = false;
 let abChatContextHint = null; // contexte initial (ex: dernière analyse Vision)
 
 function openChatSheet(opts = {}) {
   const sheet = document.getElementById('chat-sheet');
   const scrim = document.getElementById('scrim');
+
+  // V92 : cacher le bouton feedback flottant
+  const fab = document.getElementById('feedback-fab');
+  if (fab) fab.style.display = 'none';
 
   // Reset si nouvelle session
   if (opts.fresh) {
@@ -9137,6 +9596,9 @@ function openChatSheet(opts = {}) {
 function closeChatSheet() {
   document.getElementById('chat-sheet').classList.remove('show');
   document.getElementById('scrim').classList.remove('show');
+  // V92 : ré-afficher le bouton feedback flottant
+  const fab = document.getElementById('feedback-fab');
+  if (fab) fab.style.display = '';
 }
 
 function renderChatContextPill(ctx) {
@@ -9185,12 +9647,18 @@ function scrollChatToBottom() {
 }
 
 function showChatAttachPreview(base64, label) {
+  // V95 : base64 peut être null (cas document), on affiche juste le label
   abChatPendingImage = base64;
-  abChatPendingImageLabel = label || 'Photo';
+  abChatPendingImageLabel = label || (base64 ? 'Photo' : 'Document');
   const preview = document.getElementById('chat-attach-preview');
   const thumb = document.getElementById('chat-attach-thumb');
   const lbl = document.getElementById('chat-attach-label');
-  thumb.src = 'data:image/jpeg;base64,' + base64;
+  if (base64) {
+    thumb.src = 'data:image/jpeg;base64,' + base64;
+    thumb.style.display = '';
+  } else {
+    thumb.style.display = 'none';
+  }
   lbl.textContent = abChatPendingImageLabel;
   preview.classList.add('show');
 }
@@ -9205,17 +9673,32 @@ async function sendChatMessage() {
   if (abChatThinking) return;
   const input = document.getElementById('chat-input');
   const text = (input.value || '').trim();
-  if (!text && !abChatPendingImage) return;
+  if (!text && !abChatPendingImage && !abChatPendingDoc) return;
+
+  // V95 : si un doc est attaché, on l'intègre au message texte
+  let effectiveText = text;
+  if (abChatPendingDoc) {
+    if (abChatPendingDoc.text) {
+      // Document texte : on l'injecte directement
+      effectiveText = `[Document joint : ${abChatPendingDoc.name}]\n\n${abChatPendingDoc.text}\n\n${text}`;
+    } else if (abChatPendingDoc.type === 'application/pdf') {
+      // PDF : on l'envoie comme pièce jointe (Claude supporte les PDF nativement)
+      effectiveText = text || `Voici un document (${abChatPendingDoc.name}). Peux-tu m'aider avec ?`;
+    }
+  }
 
   // Affiche le message user
   const imageToSend = abChatPendingImage;
-  renderChatMessage('user', text, imageToSend);
-  abChatHistory.push({ role: 'user', content: text, image: imageToSend });
+  const docToSend = abChatPendingDoc;
+  const displayText = docToSend ? `📎 ${docToSend.name}${text ? '\n\n' + text : ''}` : text;
+  renderChatMessage('user', displayText, imageToSend);
+  abChatHistory.push({ role: 'user', content: effectiveText, image: imageToSend, doc: docToSend });
 
   // Reset input
   input.value = '';
   input.style.height = 'auto';
   hideChatAttachPreview();
+  abChatPendingDoc = null;
   updateChatSendBtn();
 
   // Appel Claude
@@ -9224,7 +9707,7 @@ async function sendChatMessage() {
   document.getElementById('chat-header-status').textContent = 'écrit…';
 
   try {
-    const reply = await callClaudeChat(text, imageToSend);
+    const reply = await callClaudeChat(effectiveText, imageToSend, docToSend);
     hideChatThinking();
     abChatThinking = false;
     document.getElementById('chat-header-status').textContent = 'en ligne';
@@ -9240,7 +9723,7 @@ async function sendChatMessage() {
   }
 }
 
-async function callClaudeChat(userText, userImage) {
+async function callClaudeChat(userText, userImage, userDoc) {
   // Construit le system prompt avec le contexte
   const contextLines = [];
   contextLines.push(`Aujourd'hui : ${TODAY.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`);
@@ -9295,6 +9778,15 @@ ${contextLines.join('\n')}`;
         { type: 'text', text: userText || 'Regarde cette photo, qu\'en penses-tu ?' }
       ]
     });
+  } else if (userDoc && userDoc.type === 'application/pdf') {
+    // V95 : Document PDF — Claude supporte les PDFs nativement via document type
+    messages.push({
+      role: 'user',
+      content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: userDoc.base64 } },
+        { type: 'text', text: userText || 'Voici un document, peux-tu m\'aider ?' }
+      ]
+    });
   } else {
     messages.push({ role: 'user', content: userText });
   }
@@ -9326,9 +9818,9 @@ ${contextLines.join('\n')}`;
 }
 
 function updateChatSendBtn() {
-  const input = document.getElementById('chat-input');
+  // V92/V95 : on garde le bouton toujours actif visuellement, sendChatMessage gère le cas vide
   const btn = document.getElementById('chat-send-btn');
-  btn.disabled = (!input.value.trim() && !abChatPendingImage) || abChatThinking;
+  if (btn) btn.disabled = abChatThinking;
 }
 
 // Convert File to base64 (sans le préfixe data:...)
@@ -9371,30 +9863,147 @@ function initChatSheetBindings() {
 
   const attachBtn = document.getElementById('chat-attach-btn');
   const fileInput = document.getElementById('chat-file-input');
-  if (attachBtn && fileInput) {
-    attachBtn.addEventListener('click', () => fileInput.click());
+  const fileInputCamera = document.getElementById('chat-file-input-camera');
+  const fileInputDoc = document.getElementById('chat-file-input-doc');
+  const attachMenu = document.getElementById('chat-attach-menu');
+
+  // V95 : Le bouton + ouvre maintenant un menu (photo / caméra / doc / œil)
+  if (attachBtn && attachMenu) {
+    attachBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      attachMenu.classList.toggle('show');
+    });
+    // Ferme le menu si on clique ailleurs
+    document.addEventListener('click', (e) => {
+      if (!attachMenu.contains(e.target) && e.target !== attachBtn && !attachBtn.contains(e.target)) {
+        attachMenu.classList.remove('show');
+      }
+    });
+  }
+
+  // Handler commun pour les images (galerie ou caméra)
+  async function handleImageFile(file) {
+    if (!file) return;
+    try {
+      const base64 = await fileToBase64(file);
+      showChatAttachPreview(base64, file.name || 'Photo');
+      updateChatSendBtn();
+    } catch (err) {
+      console.error(err);
+      showToast("Impossible de lire l'image");
+    }
+  }
+
+  // Photo de la galerie
+  const photoBtn = document.getElementById('chat-attach-photo');
+  if (photoBtn && fileInput) {
+    photoBtn.addEventListener('click', () => {
+      attachMenu.classList.remove('show');
+      fileInput.click();
+    });
     fileInput.addEventListener('change', async (e) => {
+      await handleImageFile(e.target.files[0]);
+      fileInput.value = '';
+    });
+  }
+
+  // Prendre une photo (caméra système)
+  const cameraBtn = document.getElementById('chat-attach-camera');
+  if (cameraBtn && fileInputCamera) {
+    cameraBtn.addEventListener('click', () => {
+      attachMenu.classList.remove('show');
+      fileInputCamera.click();
+    });
+    fileInputCamera.addEventListener('change', async (e) => {
+      await handleImageFile(e.target.files[0]);
+      fileInputCamera.value = '';
+    });
+  }
+
+  // Document (PDF, txt)
+  const docBtn = document.getElementById('chat-attach-doc');
+  if (docBtn && fileInputDoc) {
+    docBtn.addEventListener('click', () => {
+      attachMenu.classList.remove('show');
+      fileInputDoc.click();
+    });
+    fileInputDoc.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       try {
-        const base64 = await fileToBase64(file);
-        showChatAttachPreview(base64, file.name || 'Photo');
+        // Pour PDF : on convertit en base64 et on envoie au modèle (Claude supporte PDF natif)
+        if (file.type === 'application/pdf') {
+          const base64 = await fileToBase64(file);
+          showChatAttachPreview(null, file.name || 'Document.pdf');
+          // Stocke différemment pour les PDF
+          abChatPendingImage = null;
+          abChatPendingDoc = { base64, type: 'application/pdf', name: file.name };
+        } else if (file.type.startsWith('text/')) {
+          // Texte plain : on lit le contenu
+          const text = await file.text();
+          showChatAttachPreview(null, file.name || 'Texte');
+          abChatPendingDoc = { text, name: file.name };
+        } else {
+          showToast('Type de fichier non supporté pour le moment');
+        }
         updateChatSendBtn();
       } catch (err) {
         console.error(err);
+        showToast("Impossible de lire le document");
       }
-      fileInput.value = ''; // reset pour pouvoir reprendre la même photo
+      fileInputDoc.value = '';
+    });
+  }
+
+  // Ouvrir l'œil (caméra live)
+  const eyeBtn = document.getElementById('chat-attach-eye');
+  if (eyeBtn) {
+    eyeBtn.addEventListener('click', () => {
+      attachMenu.classList.remove('show');
+      closeChatSheet();
+      setTimeout(() => {
+        if (typeof openEyeView === 'function') openEyeView();
+        else showToast("Ouvre 'Que vois-je ?' depuis l'écran principal");
+      }, 250);
     });
   }
 
   const removeAttach = document.getElementById('chat-attach-remove');
   if (removeAttach) removeAttach.addEventListener('click', () => {
     hideChatAttachPreview();
+    abChatPendingDoc = null;
     updateChatSendBtn();
   });
 }
 
 function openVoiceSheet() {
+  // V95 : Cette fonction redirige maintenant vers openChatSheet (voix supprimée en V1).
+  // Tous les anciens appels (nouveau voyage, nouveau moment, edit voyage, etc.) ouvrent
+  // désormais la même interface chat conversationnelle propre.
+
+  // Construit un contexte si on a un moment lié
+  let ctxHint = null;
+  let intro = null;
+  if (pendingContextMoment) {
+    const moment = MOMENTS.find(m => m.id === pendingContextMoment);
+    if (moment) {
+      const isVoyage = moment.type === 'voyage' || moment.type === 'weekend';
+      const dateLabel = moment.date ? new Date(moment.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '';
+      ctxHint = {
+        title: moment.title || (isVoyage ? 'Voyage' : 'Moment'),
+        context: moment.body || '',
+        address: dateLabel
+      };
+      intro = isVoyage
+        ? `On parlait de ${moment.title}. Tu veux préparer quelque chose, ajouter un détail, ou autre chose ?`
+        : `On parlait de "${moment.title}". Tu veux ajouter quelque chose ?`;
+    }
+  }
+
+  openChatSheet({ fresh: true, contextHint: ctxHint, intro: intro });
+}
+
+function legacyOpenVoiceSheet_DISABLED() {
   voiceTranscript = '';
   voiceInterpretation = null;
   voiceClosed = false;
@@ -10424,6 +11033,33 @@ function renderOrga() {
         <div class="orga-card-arrow-v2">›</div>
       </button>
 
+      <!-- V93 : Card Souvenirs (galerie photos + parcours) -->
+      <button class="orga-card-v2 ${SOUVENIRS.length > 0 ? 'orga-card-active' : ''}" data-orga="souvenirs">
+        <div class="orga-card-icon-v2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+        <div class="orga-card-body-v2">
+          <div class="orga-card-head">
+            <div class="orga-card-title-v2">Souvenirs</div>
+            ${SOUVENIRS.length > 0 ? `<span class="orga-card-count">${SOUVENIRS.length}</span>` : ''}
+          </div>
+          <div class="orga-card-meta-v2">${(() => {
+            const photos = SOUVENIRS.filter(s => s.type === 'photo').length;
+            const marks = SOUVENIRS.filter(s => s.type === 'mark').length;
+            if (SOUVENIRS.length === 0) return 'Aucun souvenir — utilise "Que vois-je ?" pour en créer';
+            const parts = [];
+            if (photos) parts.push(`${photos} photo${photos > 1 ? 's' : ''}`);
+            if (marks) parts.push(`${marks} marqueur${marks > 1 ? 's' : ''}`);
+            return parts.join(' · ');
+          })()}</div>
+        </div>
+        <div class="orga-card-arrow-v2">›</div>
+      </button>
+
       <button class="orga-card-v2 orga-card-soon" data-orga="budget">
         <div class="orga-card-icon-v2">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -10499,6 +11135,7 @@ function renderOrga() {
       const target = el.dataset.orga;
       if (target === 'voyage') { currentTab = 'voyage'; renderVoyageTab(); }
       else if (target === 'evenement') { currentTab = 'evenement'; renderEventTab(); }
+      else if (target === 'souvenirs') { renderSouvenirsView(); }
       else if (target === 'repas') showToast("Repas — bientôt");
       else if (target === 'admin') showToast("Administratif — bientôt");
       else if (target === 'budget') {
@@ -10521,6 +11158,384 @@ function renderPlaceholder(title, text) {
     </div>
   `;
   document.getElementById('back-to-today').addEventListener('click', () => switchTab('today'));
+}
+
+// V93 — Vue Souvenirs (galerie photos + parcours)
+function renderSouvenirsView() {
+  const photos = SOUVENIRS.filter(s => s.type === 'photo');
+  const marks = SOUVENIRS.filter(s => s.type === 'mark');
+
+  // Group by day
+  const byDay = {};
+  SOUVENIRS.forEach(s => {
+    const day = s.ts.slice(0, 10);
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(s);
+  });
+  const sortedDays = Object.keys(byDay).sort((a,b) => b.localeCompare(a));
+
+  let html = `
+    <div class="today-hero">
+      <div class="today-hero-eyebrow">SOUVENIRS</div>
+      <h1 class="today-hero-date" style="font-size: 26px;">
+        ${SOUVENIRS.length > 0 ? `${photos.length} photo${photos.length > 1 ? 's' : ''}${marks.length ? ' · ' + marks.length + ' marqueur' + (marks.length > 1 ? 's' : '') : ''}` : 'Aucun souvenir'}
+      </h1>
+      <button class="section-action" id="souvenirs-back" style="margin-top: 14px; font-size: 13px;">← retour</button>
+    </div>
+  `;
+
+  // V94 : Bouton pour générer l'album narratif (visible si au moins 2 souvenirs)
+  if (SOUVENIRS.length >= 2) {
+    html += `
+      <div style="padding: 0 16px 8px;">
+        <button class="album-generate-btn" id="album-generate-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+          </svg>
+          <span>Raconte-moi mon album</span>
+        </button>
+      </div>
+    `;
+  }
+
+  if (SOUVENIRS.length === 0) {
+    html += `
+      <div style="padding: 30px 28px; text-align: center;">
+        <div style="font-family: 'Fraunces', serif; font-style: italic; color: var(--ink-3); font-size: 15px; line-height: 1.6;">
+          Va dans <em>"Que vois-je ?"</em> et tape la pastille capture pour créer ton premier souvenir.
+        </div>
+      </div>
+    `;
+  } else {
+    html += '<div class="souvenirs-list">';
+    sortedDays.forEach(day => {
+      const items = byDay[day];
+      const dayDate = new Date(day);
+      const dayLabel = dayDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+      html += `<div class="souvenirs-day-label">${dayLabel}</div>`;
+      html += '<div class="souvenirs-grid">';
+      items.forEach(s => {
+        const time = s.ts.slice(11, 16);
+        const addr = s.address ? s.address : '';
+        const title = s.analysis?.name || (s.type === 'mark' ? 'Position marquée' : 'Photo');
+        if (s.type === 'photo' && s.imageBase64) {
+          html += `
+            <button class="souvenir-card" data-souvenir-id="${s.id}">
+              <img class="souvenir-thumb" src="data:image/jpeg;base64,${s.imageBase64}" alt="" />
+              <div class="souvenir-info">
+                <div class="souvenir-title">${escapeAttr(title)}</div>
+                <div class="souvenir-meta">${time}${addr ? ' · ' + escapeAttr(addr) : ''}</div>
+              </div>
+            </button>`;
+        } else {
+          html += `
+            <button class="souvenir-card souvenir-mark" data-souvenir-id="${s.id}">
+              <div class="souvenir-thumb-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--olive-deep);">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <div class="souvenir-info">
+                <div class="souvenir-title">${escapeAttr(title)}</div>
+                <div class="souvenir-meta">${time}${addr ? ' · ' + escapeAttr(addr) : ''}</div>
+              </div>
+            </button>`;
+        }
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('main').innerHTML = html;
+  document.getElementById('souvenirs-back').addEventListener('click', () => switchTab('orga'));
+
+  // V94 : Binding du bouton album narratif
+  const albumBtn = document.getElementById('album-generate-btn');
+  if (albumBtn) albumBtn.addEventListener('click', generateAlbumNarratif);
+
+  // Click sur un souvenir → preview
+  document.querySelectorAll('.souvenir-card[data-souvenir-id]').forEach(el => {
+    el.addEventListener('click', () => openSouvenirPreview(el.dataset.souvenirId));
+  });
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// V93 — Preview d'un souvenir (modal)
+function openSouvenirPreview(id) {
+  const s = SOUVENIRS.find(x => x.id === id);
+  if (!s) return;
+
+  const time = new Date(s.ts).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+
+  let html = `
+    <div class="souvenir-preview-backdrop" id="souvenir-preview-backdrop"></div>
+    <div class="souvenir-preview-modal">
+      <button class="souvenir-preview-close" id="souvenir-preview-close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      ${s.imageBase64 ? `<img class="souvenir-preview-img" src="data:image/jpeg;base64,${s.imageBase64}" alt="" />` : '<div class="souvenir-preview-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:64px;height:64px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'}
+      <div class="souvenir-preview-body">
+        <div class="souvenir-preview-title">${escapeAttr(s.analysis?.name || (s.type === 'mark' ? 'Position marquée' : 'Photo'))}</div>
+        ${s.analysis?.context ? `<div class="souvenir-preview-context">${escapeAttr(s.analysis.context)}</div>` : ''}
+        ${s.address ? `<div class="souvenir-preview-addr">📍 ${escapeAttr(s.address)}</div>` : ''}
+        <div class="souvenir-preview-time">${time}</div>
+        <div class="souvenir-preview-actions">
+          ${s.lat && s.lng ? `<button class="souvenir-preview-btn" id="souvenir-open-map">Voir sur la carte</button>` : ''}
+          ${s.imageBase64 ? `<button class="souvenir-preview-btn secondary" id="souvenir-download">Télécharger</button>` : ''}
+          <button class="souvenir-preview-btn danger" id="souvenir-delete">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  const overlay = document.createElement('div');
+  overlay.id = 'souvenir-preview-overlay';
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+
+  document.getElementById('souvenir-preview-close').addEventListener('click', closeSouvenirPreview);
+  document.getElementById('souvenir-preview-backdrop').addEventListener('click', closeSouvenirPreview);
+  const mapBtn = document.getElementById('souvenir-open-map');
+  if (mapBtn) mapBtn.addEventListener('click', () => {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`, '_blank');
+  });
+  const dlBtn = document.getElementById('souvenir-download');
+  if (dlBtn) dlBtn.addEventListener('click', () => {
+    downloadPhotoToDevice(s.imageBase64, `alberto-${s.id}.jpg`);
+    showToast('Téléchargement lancé');
+  });
+  document.getElementById('souvenir-delete').addEventListener('click', () => {
+    if (confirm('Supprimer ce souvenir ?')) {
+      deleteSouvenir(s.id);
+      closeSouvenirPreview();
+      renderSouvenirsView();
+    }
+  });
+}
+
+function closeSouvenirPreview() {
+  const overlay = document.getElementById('souvenir-preview-overlay');
+  if (overlay) overlay.remove();
+}
+
+// ============================================
+// V94 — ALBUM NARRATIF : Alberto raconte ton parcours à partir des souvenirs
+// ============================================
+
+let currentAlbumText = ''; // pour le partage
+
+async function generateAlbumNarratif() {
+  if (SOUVENIRS.length < 2) {
+    showToast('Il faut au moins 2 souvenirs pour faire un album');
+    return;
+  }
+
+  // Affiche un écran de génération
+  showAlbumGeneratingScreen();
+
+  // Construire le contexte chronologique
+  const sorted = [...SOUVENIRS].sort((a, b) => new Date(a.ts) - new Date(b.ts));
+  const lines = sorted.map((s, i) => {
+    const time = new Date(s.ts).toLocaleString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long',
+      hour: '2-digit', minute: '2-digit'
+    });
+    const title = s.analysis?.name || (s.type === 'mark' ? 'Marqueur de présence' : 'Photo');
+    const ctx = s.analysis?.context ? ` (${s.analysis.context})` : '';
+    const addr = s.address ? ` — ${s.address}` : '';
+    const photoTag = s.type === 'photo' ? ' [PHOTO]' : '';
+    return `${i + 1}. ${time} : ${title}${ctx}${addr}${photoTag}`;
+  });
+
+  const systemPrompt = `Tu es Alberto, un majordome de voyage chaleureux et lettré, méditerranéen, qui aime raconter les histoires en français.
+
+Tu reçois la liste chronologique de moments capturés par l'utilisateur (photos et marqueurs de présence avec analyse visuelle et adresse).
+
+Ta tâche : écrire un récit narratif court et chaleureux qui raconte cette journée/ce voyage comme un carnet de bord intime. Le ton doit être doux, observateur, jamais clinique. Tu peux glisser quelques détails sur les lieux quand tu en reconnais. Pas d'emojis. Pas de blabla d'introduction.
+
+Structure :
+- 1 titre court et évocateur (pas "Mon album", quelque chose comme "Une journée à Antony" ou "Lumière d'Étretat")
+- 2 à 4 paragraphes en prose narrative (pas de liste à puces, pas de titres intermédiaires)
+- Tutoie l'utilisateur
+- Réponds en JSON pur sans markdown : { "title": "...", "body": "paragraphe1\\n\\nparagraphe2" }`;
+
+  const userText = `Voici la chronologie de mes captures :
+
+${lines.join('\n')}
+
+Raconte-moi cette journée comme tu l'as vue à travers mes pas.`;
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (typeof ALBERTO_SECRET !== 'undefined' && ALBERTO_SECRET) headers['x-alberto-secret'] = ALBERTO_SECRET;
+
+    const response = await fetch(CLAUDE_PROXY_URL, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: 1200,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userText }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API error ' + response.status);
+    const data = await response.json();
+    const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+
+    // Parse le JSON (Claude pourrait éventuellement entourer de ```json...```)
+    let parsed;
+    try {
+      const clean = raw.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch (e) {
+      // Fallback : utilise tout le texte brut comme body
+      parsed = { title: 'Mon album', body: raw };
+    }
+
+    renderAlbumNarratif(parsed.title || 'Mon album', parsed.body || raw, sorted);
+  } catch (err) {
+    console.error('Album generation error:', err);
+    closeAlbumOverlay();
+    showToast("Désolé, l'album n'a pas pu être généré. Réessaie plus tard.");
+  }
+}
+
+function showAlbumGeneratingScreen() {
+  // Supprime un ancien overlay si présent
+  closeAlbumOverlay();
+  const overlay = document.createElement('div');
+  overlay.id = 'album-overlay';
+  overlay.innerHTML = `
+    <div class="album-backdrop"></div>
+    <div class="album-modal">
+      <div class="album-loading">
+        <div class="album-loading-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;color:var(--olive);">
+            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+          </svg>
+        </div>
+        <div class="album-loading-title">Alberto écrit ton album…</div>
+        <div class="album-loading-sub">Quelques secondes, je relis tes pas.</div>
+        <div class="album-loading-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function renderAlbumNarratif(title, body, sortedSouvenirs) {
+  closeAlbumOverlay();
+
+  // Sauve pour partage
+  currentAlbumText = `${title}\n\n${body}\n\n— raconté par Alberto`;
+
+  const photos = sortedSouvenirs.filter(s => s.type === 'photo' && s.imageBase64);
+  const paragraphs = body.split(/\n\n+/);
+
+  // Intercale les photos entre les paragraphes
+  const interleavedHtml = [];
+  paragraphs.forEach((p, i) => {
+    interleavedHtml.push(`<p class="album-paragraph">${escapeAttr(p)}</p>`);
+    // Insère une photo après chaque paragraphe (sauf le dernier) si dispo
+    const photoIdx = i;
+    if (photos[photoIdx] && i < paragraphs.length - 1) {
+      const s = photos[photoIdx];
+      interleavedHtml.push(`
+        <div class="album-photo-wrap">
+          <img class="album-photo" src="data:image/jpeg;base64,${s.imageBase64}" alt="" />
+          ${s.address ? `<div class="album-photo-caption">${escapeAttr(s.address)}</div>` : ''}
+        </div>
+      `);
+    }
+  });
+
+  // Toutes les photos restantes en grille à la fin
+  const remainingPhotos = photos.slice(paragraphs.length - 1);
+  let remainingHtml = '';
+  if (remainingPhotos.length > 0) {
+    remainingHtml = `
+      <div class="album-photos-grid">
+        ${remainingPhotos.map(s => `
+          <img class="album-photos-grid-item" src="data:image/jpeg;base64,${s.imageBase64}" alt="" />
+        `).join('')}
+      </div>
+    `;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'album-overlay';
+  overlay.innerHTML = `
+    <div class="album-backdrop"></div>
+    <div class="album-modal album-modal-full">
+      <button class="album-close" id="album-close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="album-scroll">
+        <div class="album-eyebrow">ALBUM NARRATIF</div>
+        <h1 class="album-title">${escapeAttr(title)}</h1>
+        <div class="album-body">
+          ${interleavedHtml.join('')}
+          ${remainingHtml}
+        </div>
+        <div class="album-footer">
+          <div class="album-footer-signature">raconté par <em>Alberto</em></div>
+        </div>
+        <div class="album-actions">
+          <button class="album-action-btn primary" id="album-share-wa">Partager sur WhatsApp</button>
+          <button class="album-action-btn" id="album-copy">Copier le texte</button>
+          <button class="album-action-btn secondary" id="album-regenerate">Refaire le récit</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('album-close').addEventListener('click', closeAlbumOverlay);
+  document.getElementById('album-share-wa').addEventListener('click', shareAlbumWhatsApp);
+  document.getElementById('album-copy').addEventListener('click', copyAlbumText);
+  document.getElementById('album-regenerate').addEventListener('click', () => {
+    closeAlbumOverlay();
+    generateAlbumNarratif();
+  });
+}
+
+function closeAlbumOverlay() {
+  const o = document.getElementById('album-overlay');
+  if (o) o.remove();
+}
+
+function shareAlbumWhatsApp() {
+  if (!currentAlbumText) return;
+  const encoded = encodeURIComponent(currentAlbumText);
+  window.open(`https://wa.me/?text=${encoded}`, '_blank');
+}
+
+function copyAlbumText() {
+  if (!currentAlbumText) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(currentAlbumText).then(
+      () => showToast('Texte copié'),
+      () => showToast('Impossible de copier')
+    );
+  } else {
+    showToast('Copie non supportée');
+  }
 }
 
 function renderVoyageTab() {
@@ -13716,6 +14731,84 @@ async function openEyeView() {
 }
 
 // V77 : Capture frame vidéo en base64 JPEG
+// ============================================
+// V93 — SOUVENIRS : photos + parcours (marquages GPS sans photo)
+// ============================================
+// Stockage local navigateur. Chaque entrée :
+// { id, ts, type: 'photo'|'mark', lat, lng, address, analysis: {name,context}, imageBase64?, voyageId? }
+
+let SOUVENIRS = [];
+
+function loadSouvenirs() {
+  try {
+    const raw = localStorage.getItem('alberto-souvenirs');
+    SOUVENIRS = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    SOUVENIRS = [];
+  }
+}
+
+function saveSouvenirs() {
+  try {
+    localStorage.setItem('alberto-souvenirs', JSON.stringify(SOUVENIRS));
+  } catch (e) {
+    console.warn('Souvenirs storage failed:', e);
+    if (e.name === 'QuotaExceededError') {
+      // Quota dépassé → on garde les 30 plus récents pour éviter de perdre tout
+      SOUVENIRS = SOUVENIRS.sort((a,b) => new Date(b.ts) - new Date(a.ts)).slice(0, 30);
+      try { localStorage.setItem('alberto-souvenirs', JSON.stringify(SOUVENIRS)); } catch(e2) {}
+    }
+  }
+}
+
+function addSouvenir({ type, imageBase64, lat, lng, address, analysis, voyageId }) {
+  const id = 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  const souvenir = {
+    id,
+    ts: new Date().toISOString(),
+    type, // 'photo' ou 'mark'
+    lat: lat || null,
+    lng: lng || null,
+    address: address || null,
+    analysis: analysis || null,
+    imageBase64: imageBase64 || null,
+    voyageId: voyageId || null
+  };
+  SOUVENIRS.unshift(souvenir);
+  saveSouvenirs();
+  return souvenir;
+}
+
+function getSouvenirs(opts = {}) {
+  let list = [...SOUVENIRS];
+  if (opts.type) list = list.filter(s => s.type === opts.type);
+  if (opts.voyageId) list = list.filter(s => s.voyageId === opts.voyageId);
+  if (opts.limit) list = list.slice(0, opts.limit);
+  return list;
+}
+
+function deleteSouvenir(id) {
+  SOUVENIRS = SOUVENIRS.filter(s => s.id !== id);
+  saveSouvenirs();
+}
+
+// V93 — Téléchargement automatique d'une photo vers le dossier Téléchargements
+function downloadPhotoToDevice(base64, filename) {
+  try {
+    const a = document.createElement('a');
+    a.href = 'data:image/jpeg;base64,' + base64;
+    a.download = filename || ('alberto-' + Date.now() + '.jpg');
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 100);
+  } catch (e) {
+    console.warn('Download failed:', e);
+  }
+}
+
+// Init au chargement
+loadSouvenirs();
+
 function captureVideoFrameBase64() {
   const video = document.getElementById('live-view-video');
   if (!video || video.readyState < 2) return null;
@@ -14443,21 +15536,43 @@ captureBtn.addEventListener('mouseup', () => {
 });
 captureBtn.addEventListener('mouseleave', () => clearTimeout(captureBtnPressTimer));
 
-// "Je suis là sans photo" — marque le POI le plus proche comme vécu, sans capture image
+// V93 : "Je suis là sans photo" — long press = enregistre juste la position GPS dans SOUVENIRS
+// Crée un point dans le parcours du voyage
 function markPresentNoPhoto() {
-  if (!liveViewCurrentPoi || !liveViewVoyageId || liveViewDayNum === null) {
-    showToast('Aucun lieu identifié à proximité');
+  if (!liveViewLastGps) {
+    showToast('GPS non disponible — tape rapide pour photo');
     return;
   }
-  const ok = markPoiAsVecu(liveViewVoyageId, liveViewDayNum, liveViewCurrentPoi.idx);
-  if (ok) {
-    try { localStorage.setItem('alberto-moments', JSON.stringify(MOMENTS)); } catch(e) {}
-    showToast(`${liveViewCurrentPoi.poi.nom} noté ✓`);
-    // Refresh le bandeau
-    updateLiveViewStatus(liveViewCurrentPoi.poi, liveViewCurrentPoi.idx, liveViewCurrentPoi.distance);
-  } else {
-    showToast('Déjà noté');
+  const analysis = liveViewLastAnalysis ? {
+    name: liveViewLastAnalysis.name,
+    context: liveViewLastAnalysis.context
+  } : null;
+  const addr = liveViewLastAnalysis?.address?.short || null;
+
+  addSouvenir({
+    type: 'mark',
+    imageBase64: null,
+    lat: liveViewLastGps.lat,
+    lng: liveViewLastGps.lng,
+    address: addr,
+    analysis: analysis,
+    voyageId: liveViewVoyageId || null
+  });
+
+  // Marqueur sur la mini-map si dispo
+  if (liveViewMiniMap) {
+    try {
+      L.circleMarker([liveViewLastGps.lat, liveViewLastGps.lng], {
+        radius: 5,
+        fillColor: '#2D5F2D',
+        color: '#FFF8EE',
+        weight: 2,
+        fillOpacity: 0.8
+      }).addTo(liveViewMiniMap);
+    } catch(e) {}
   }
+
+  showToast(addr ? `Je suis là · ${addr.slice(0,30)}` : 'Position enregistrée ✓');
 }
 
 function captureFromLiveView() {
@@ -14473,6 +15588,7 @@ function captureFromLiveView() {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  const base64Only = dataUrl.split(',')[1] || '';
 
   // Flash visuel
   const flash = document.createElement('div');
@@ -14483,7 +15599,44 @@ function captureFromLiveView() {
 
   if (navigator.vibrate) navigator.vibrate(30);
 
-  // Sauver la photo
+  // V93 : Sauve dans SOUVENIRS (galerie interne Alberto)
+  // Avec position GPS + analyse Vision + voyage en cours si applicable
+  const analysis = liveViewLastAnalysis ? {
+    name: liveViewLastAnalysis.name,
+    context: liveViewLastAnalysis.context
+  } : null;
+  const addr = liveViewLastAnalysis?.address?.short || null;
+
+  const souvenir = addSouvenir({
+    type: 'photo',
+    imageBase64: base64Only,
+    lat: liveViewLastGps?.lat || null,
+    lng: liveViewLastGps?.lng || null,
+    address: addr,
+    analysis: analysis,
+    voyageId: liveViewVoyageId || null
+  });
+
+  // V93 : Téléchargement automatique dans le dossier Téléchargements
+  // (visible ensuite dans la galerie système Android)
+  const dateStr = new Date().toISOString().slice(0,19).replace(/[:T]/g, '-');
+  const filename = `alberto-${dateStr}.jpg`;
+  downloadPhotoToDevice(base64Only, filename);
+
+  // V93 : Marqueur visuel sur la mini-map (si dispo)
+  if (liveViewLastGps && liveViewMiniMap) {
+    try {
+      L.circleMarker([liveViewLastGps.lat, liveViewLastGps.lng], {
+        radius: 6,
+        fillColor: '#2D5F2D',
+        color: '#FFF8EE',
+        weight: 2,
+        fillOpacity: 0.9
+      }).addTo(liveViewMiniMap);
+    } catch(e) {}
+  }
+
+  // Aussi : attacher au voyage existant si dispo (legacy)
   const captureTime = new Date().toISOString();
   let label = 'Capture';
   if (liveViewCurrentPoi) {
@@ -14492,46 +15645,21 @@ function captureFromLiveView() {
     const voy = MOMENTS.find(m => m.id === liveViewVoyageId);
     if (voy) label = voy.title;
   }
-
-  // Attacher au voyage si dispo, sinon créer un moment "Souvenir"
   if (liveViewVoyageId) {
     const voy = MOMENTS.find(m => m.id === liveViewVoyageId);
     if (voy) {
       if (!voy.photos) voy.photos = [];
-      voy.photos.push({ label, dataUrl, captureTime });
+      voy.photos.push({ label, dataUrl, captureTime, souvenirId: souvenir.id });
     }
-    // V48 : si on est près d'un POI, on le marque aussi vécu (tap = je suis là + photo)
     if (liveViewCurrentPoi && liveViewDayNum !== null) {
       markPoiAsVecu(liveViewVoyageId, liveViewDayNum, liveViewCurrentPoi.idx);
-      updateLiveViewStatus(liveViewCurrentPoi.poi, liveViewCurrentPoi.idx, liveViewCurrentPoi.distance);
     }
-  } else {
-    // Pas en voyage → ajouter à un moment "souvenirs"
-    let memMoment = MOMENTS.find(m => m.id === 'm-souvenirs');
-    if (!memMoment) {
-      memMoment = {
-        id: 'm-souvenirs',
-        date: captureTime.slice(0,10),
-        type: 'sortie',
-        title: 'Souvenirs',
-        meta: '',
-        body: 'Tes captures spontanées',
-        tags: [],
-        photos: []
-      };
-      MOMENTS.unshift(memMoment);
-    }
-    memMoment.photos.push({ label, dataUrl, captureTime });
+    try { localStorage.setItem('alberto-moments', JSON.stringify(MOMENTS)); } catch(e) {}
   }
 
-  try { localStorage.setItem('alberto-moments', JSON.stringify(MOMENTS)); } catch(e) {}
-
-  // V48 : message plus précis
-  if (liveViewCurrentPoi && liveViewVoyageId) {
-    showToast(`${liveViewCurrentPoi.poi.nom} noté + photo ✓`);
-  } else {
-    showToast('Souvenir capturé ✓');
-  }
+  // Feedback utilisateur
+  const msg = addr ? `Souvenir capturé · ${addr.slice(0,30)}` : 'Souvenir capturé ✓';
+  showToast(msg);
 }
 
 // ─────────────────────────────────────────────────────
