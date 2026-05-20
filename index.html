@@ -16154,7 +16154,7 @@ ${contextLines.join('\n')}`;
         searching: false,
         hasGps: !!gps
       });
-      liveViewLastAnalysis = { name: text.slice(0, 50), context: '', address };
+      liveViewLastAnalysis = { name: text.slice(0, 50), context: '', address, _debug: { imageBase64, systemPrompt, rawResponse: text, nearbyPlaces, nearbyWiki, nearbyOsm, gpsError, timestamp: Date.now(), parseError: true } };
       if (gps) initLiveViewMiniMap(gps.lat, gps.lng); else hideLiveViewMiniMap();
       return;
     }
@@ -16215,7 +16215,8 @@ ${contextLines.join('\n')}`;
     }
 
     // Stocke tout pour debug + souvenirs + chat contextuel
-    liveViewLastAnalysis = { ...parsed, address, gps };
+    // v106-dcap : on ajoute _debug pour permettre la capture de cas complets (photo, prompt, sources)
+    liveViewLastAnalysis = { ...parsed, address, gps, _debug: { imageBase64, systemPrompt, rawResponse: text, nearbyPlaces, nearbyWiki, nearbyOsm, gpsError, timestamp: Date.now() } };
   } catch (err) {
     console.error('Vision analysis error:', err);
     setLiveViewState({
@@ -17974,6 +17975,440 @@ updateFeedbackCount();
 initChatSheetBindings();
 
 renderHome();
+
+// =====================================================
+// DEBUG CAPTURE — outil pour collecter des cas réels
+// et itérer sur l'algo Vision (v106 →)
+// À supprimer quand l'algo final sera figé.
+// =====================================================
+(function dcapInit() {
+  const STORAGE_KEY = 'alberto:debug_cases';
+
+  function loadCases() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { console.error('[dcap] load error', e); return []; }
+  }
+
+  function saveCases(cases) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
+      return true;
+    } catch (e) {
+      console.error('[dcap] save error', e);
+      showToast('Stockage plein — exporte puis supprime');
+      return false;
+    }
+  }
+
+  function deleteCase(id) {
+    saveCases(loadCases().filter(c => c.id !== id));
+  }
+
+  function clearAllCases() {
+    if (!confirm('Supprimer tous les cas capturés ?')) return false;
+    localStorage.removeItem(STORAGE_KEY);
+    return true;
+  }
+
+  function formatCaseMarkdown(c) {
+    const lines = [];
+    const date = new Date(c.timestamp || Date.now());
+    const dateStr = date.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const verdictEmoji = { good: '✅', partial: '⚠️', bad: '❌' };
+    const verdictLabel = { good: 'Juste', partial: 'Partiel', bad: 'Raté' };
+    const v = c.userVerdict || 'bad';
+
+    lines.push(`# Cas Alberto Debug — ${dateStr}`);
+    lines.push('');
+    lines.push(`## Verdict utilisateur`);
+    lines.push(`${verdictEmoji[v]} ${verdictLabel[v]}`);
+    lines.push('');
+
+    if (c.userTrueName) {
+      lines.push(`## Vrai nom du lieu`);
+      lines.push(c.userTrueName);
+      lines.push('');
+    }
+    if (c.userNotes) {
+      lines.push(`## Notes utilisateur`);
+      lines.push(c.userNotes);
+      lines.push('');
+    }
+
+    lines.push('---');
+    lines.push('');
+
+    const a = c.analysis || {};
+    lines.push(`## Ce qu'Alberto a affiché`);
+    lines.push(`- **Nom** : ${a.name || '—'}`);
+    lines.push(`- **Confiance** : ${typeof a.confidence === 'number' ? Math.round(a.confidence * 100) + '%' : '—'}`);
+    if (a.context) lines.push(`- **Contexte** : ${a.context}`);
+    if (a.address && a.address.short) lines.push(`- **Adresse reverse** : ${a.address.short}`);
+    lines.push('');
+
+    if (a.observation) {
+      lines.push(`## Observation Claude`);
+      lines.push('> ' + a.observation.replace(/\n/g, '\n> '));
+      lines.push('');
+    }
+    if (Array.isArray(a.candidates) && a.candidates.length > 0) {
+      lines.push(`## Candidats étudiés (${a.candidates.length})`);
+      a.candidates.forEach((cand, i) => {
+        const conf = typeof cand.confidence === 'number' ? Math.round(cand.confidence * 100) + '%' : '?';
+        lines.push(`${i + 1}. **${cand.name || '?'}** _(${cand.source || '?'}, ${conf})_`);
+        if (cand.why) lines.push(`   - ${cand.why}`);
+      });
+      lines.push('');
+    }
+    if (a.reasoning) {
+      lines.push(`## Raisonnement de décision`);
+      lines.push('> ' + a.reasoning.replace(/\n/g, '\n> '));
+      lines.push('');
+    }
+    if (Array.isArray(a.alternatives) && a.alternatives.length > 0) {
+      lines.push(`## Alternatives écartées`);
+      a.alternatives.forEach(alt => {
+        lines.push(`- **${alt.name || '?'}** — ${alt.reason || '?'}`);
+      });
+      lines.push('');
+    }
+
+    const d = c.debug || {};
+    lines.push('---');
+    lines.push('');
+    lines.push(`## Sources interrogées autour du GPS`);
+    lines.push('');
+
+    if (a.gps) {
+      lines.push(`### GPS`);
+      lines.push(`- Coordonnées : ${a.gps.lat?.toFixed(5) || '?'}, ${a.gps.lng?.toFixed(5) || '?'}`);
+      lines.push(`- Précision : ~${Math.round(a.gps.accuracy || 0)}m`);
+      if (d.gpsError) lines.push(`- ⚠️ Erreur : ${d.gpsError}`);
+      lines.push('');
+    } else {
+      lines.push(`### GPS`);
+      lines.push(`- Non disponible${d.gpsError ? ' (' + d.gpsError + ')' : ''}`);
+      lines.push('');
+    }
+
+    const places = d.nearbyPlaces || [];
+    lines.push(`### Google Places (${places.length}, rayon 100m)`);
+    if (places.length === 0) lines.push('_(aucun)_');
+    else places.forEach((p, i) => {
+      const rating = p.rating ? `, ${p.rating}★ ${p.ratingCount} avis` : '';
+      lines.push(`${i + 1}. **${p.name}** — à ${p.distance}m${p.type ? ' · ' + p.type : ''}${rating}`);
+    });
+    lines.push('');
+
+    const wiki = d.nearbyWiki || [];
+    lines.push(`### Wikipedia (${wiki.length}, rayon 500m)`);
+    if (wiki.length === 0) lines.push('_(aucun)_');
+    else wiki.slice(0, 8).forEach((w, i) => {
+      lines.push(`${i + 1}. **${w.name || w.title}** — à ${w.distance}m`);
+      if (w.extract) lines.push(`   - ${w.extract.slice(0, 180).replace(/\n/g, ' ')}…`);
+    });
+    lines.push('');
+
+    const osm = d.nearbyOsm || [];
+    lines.push(`### OSM Overpass (${osm.length}, rayon 400m)`);
+    if (osm.length === 0) lines.push('_(aucun)_');
+    else osm.slice(0, 12).forEach((o, i) => {
+      const cat = o.categoryLabel ? ' [' + o.categoryLabel + ']' : '';
+      lines.push(`${i + 1}. **${o.name || o.categoryLabel || '?'}**${cat} — à ${o.distance}m`);
+    });
+    lines.push('');
+
+    lines.push('---');
+    lines.push(`_Cas ID : ${c.id} · v105_`);
+    return lines.join('\n');
+  }
+
+  function base64ToBlob(b64, mime = 'image/jpeg') {
+    const byteString = atob(b64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    return new Blob([ab], { type: mime });
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function shareCase(c) {
+    const md = formatCaseMarkdown(c);
+    const b64 = c.debug?.imageBase64;
+    const filename = `alberto-debug-${c.id}.jpg`;
+
+    if (b64 && navigator.canShare) {
+      try {
+        const blob = base64ToBlob(b64);
+        const file = new File([blob], filename, { type: 'image/jpeg' });
+        const shareData = { files: [file], text: md, title: `Cas Alberto ${c.id}` };
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          return;
+        }
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        console.warn('[dcap] share file failed', e);
+      }
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: md, title: `Cas Alberto ${c.id}` });
+        if (b64) downloadBlob(base64ToBlob(b64), filename);
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(md);
+      if (b64) downloadBlob(base64ToBlob(b64), filename);
+      showToast('Texte copié + photo téléchargée');
+    } catch (e) {
+      showToast('Export impossible');
+    }
+  }
+
+  async function shareAllCases() {
+    const cases = loadCases();
+    if (cases.length === 0) { showToast('Aucun cas à exporter'); return; }
+    const allMd = cases.map((c, i) =>
+      `═══════════════════════════════════════\nCAS ${i + 1} / ${cases.length}\n═══════════════════════════════════════\n\n` + formatCaseMarkdown(c)
+    ).join('\n\n');
+    const summary = `# Lot de ${cases.length} cas Alberto Debug — ${new Date().toLocaleString('fr-FR')}\n\n${allMd}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: summary, title: `Alberto Debug — ${cases.length} cas` });
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    try {
+      await navigator.clipboard.writeText(summary);
+      showToast(`${cases.length} cas copiés`);
+    } catch (e) { showToast('Export impossible'); }
+  }
+
+  function injectStyles() {
+    if (document.getElementById('dcap-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'dcap-styles';
+    style.textContent = `
+      .dcap-btn-row { display:flex; gap:8px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+      .dcap-btn { flex:1; padding:11px 14px; border-radius:10px; border:none; font-size:13.5px; font-weight:600; font-family:'Outfit',sans-serif; cursor:pointer; }
+      .dcap-btn-primary { background:var(--olive); color:#FFF8EE; }
+      .dcap-btn-primary:active { background:var(--olive-deep); }
+      .dcap-btn-secondary { background:var(--bg-warm); color:var(--ink-2); border:1px solid var(--line); }
+      .dcap-overlay { position:fixed; inset:0; background:rgba(15,20,16,0.88); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px; }
+      .dcap-modal { background:var(--bg); border-radius:16px; max-width:560px; width:100%; max-height:88vh; overflow:auto; padding:20px; font-family:'Outfit',sans-serif; }
+      .dcap-modal h3 { font-family:'Fraunces',serif; font-style:italic; font-size:18px; color:var(--ink); margin-bottom:14px; }
+      .dcap-verdict-row { display:flex; gap:8px; margin-bottom:14px; }
+      .dcap-verdict-pill { flex:1; padding:12px; border-radius:10px; border:2px solid var(--line); background:var(--bg-warm); font-size:13px; font-weight:600; color:var(--ink-2); cursor:pointer; text-align:center; }
+      .dcap-verdict-pill.active { border-color:var(--olive); background:var(--olive-tint); color:var(--olive-deep); }
+      .dcap-input { width:100%; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:14px; font-family:inherit; color:var(--ink); outline:none; margin-bottom:12px; box-sizing:border-box; }
+      .dcap-input:focus { border-color:var(--olive-light); }
+      textarea.dcap-input { resize:none; min-height:70px; line-height:1.4; }
+      .dcap-label { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-3); margin-bottom:6px; font-weight:600; }
+      .dcap-case-card { background:var(--bg-warm); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; display:flex; gap:12px; align-items:flex-start; }
+      .dcap-case-thumb { width:56px; height:56px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--line); }
+      .dcap-case-info { flex:1; min-width:0; }
+      .dcap-case-title { font-size:14px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .dcap-case-meta { font-size:11.5px; color:var(--ink-3); margin-top:2px; }
+      .dcap-case-actions { display:flex; gap:6px; margin-top:6px; }
+      .dcap-case-mini-btn { padding:5px 10px; font-size:11px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--ink-2); cursor:pointer; }
+      .dcap-case-mini-btn.danger { color:#A0322D; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function openCaptureForm(analysis) {
+    if (!analysis) return;
+    injectStyles();
+    const overlay = document.createElement('div');
+    overlay.className = 'dcap-overlay';
+    let verdict = null;
+    overlay.innerHTML = `
+      <div class="dcap-modal" style="max-width:480px;">
+        <h3>Capturer ce cas</h3>
+        <div class="dcap-label">Verdict</div>
+        <div class="dcap-verdict-row">
+          <button class="dcap-verdict-pill" data-v="good">✅ Juste</button>
+          <button class="dcap-verdict-pill" data-v="partial">⚠️ Partiel</button>
+          <button class="dcap-verdict-pill" data-v="bad">❌ Raté</button>
+        </div>
+        <div class="dcap-label">Vrai nom du lieu (si différent)</div>
+        <input class="dcap-input" id="dcap-true-name" type="text" placeholder="Ex : PAKIZA Équipements" />
+        <div class="dcap-label">Notes (optionnel)</div>
+        <textarea class="dcap-input" id="dcap-notes" placeholder="Ce que tu pointais, pourquoi ça a foiré…"></textarea>
+        <div class="dcap-btn-row">
+          <button class="dcap-btn dcap-btn-secondary" id="dcap-form-cancel">Annuler</button>
+          <button class="dcap-btn dcap-btn-primary" id="dcap-form-save">Enregistrer</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelectorAll('.dcap-verdict-pill').forEach(p => {
+      p.addEventListener('click', () => {
+        overlay.querySelectorAll('.dcap-verdict-pill').forEach(x => x.classList.remove('active'));
+        p.classList.add('active');
+        verdict = p.dataset.v;
+      });
+    });
+    overlay.querySelector('#dcap-form-cancel').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#dcap-form-save').addEventListener('click', () => {
+      if (!verdict) { showToast('Choisis un verdict'); return; }
+      const trueName = overlay.querySelector('#dcap-true-name').value.trim();
+      const notes = overlay.querySelector('#dcap-notes').value.trim();
+      const debug = analysis._debug || {};
+      const cleanAnalysis = { ...analysis };
+      delete cleanAnalysis._debug;
+      const caseObj = {
+        id: 'c' + Date.now().toString(36),
+        timestamp: debug.timestamp || Date.now(),
+        userVerdict: verdict,
+        userTrueName: trueName || null,
+        userNotes: notes || null,
+        analysis: cleanAnalysis,
+        debug: debug
+      };
+      const cases = loadCases();
+      cases.unshift(caseObj);
+      if (saveCases(cases)) {
+        overlay.remove();
+        const dbgModal = document.getElementById('vision-debug-modal');
+        if (dbgModal) dbgModal.remove();
+        showToast(`Cas enregistré (${cases.length} au total)`);
+      }
+    });
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  }
+
+  function openCasesList() {
+    injectStyles();
+    const cases = loadCases();
+    const overlay = document.createElement('div');
+    overlay.className = 'dcap-overlay';
+    const verdictEmoji = { good: '✅', partial: '⚠️', bad: '❌' };
+    const cardsHtml = cases.length === 0
+      ? '<div style="text-align:center;color:var(--ink-3);font-style:italic;padding:24px;">Aucun cas capturé pour le moment.</div>'
+      : cases.map(c => {
+          const thumb = c.debug?.imageBase64
+            ? `<img class="dcap-case-thumb" src="data:image/jpeg;base64,${c.debug.imageBase64}" alt="" />`
+            : `<div class="dcap-case-thumb"></div>`;
+          const date = new Date(c.timestamp).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+          const detected = c.analysis?.name || '—';
+          const truth = c.userTrueName || '';
+          const safeName = (typeof escapeAttr === 'function') ? escapeAttr(detected) : detected;
+          const safeTruth = (typeof escapeAttr === 'function') ? escapeAttr(truth) : truth;
+          return `
+            <div class="dcap-case-card" data-id="${c.id}">
+              ${thumb}
+              <div class="dcap-case-info">
+                <div class="dcap-case-title">${verdictEmoji[c.userVerdict] || '?'} ${safeName}</div>
+                <div class="dcap-case-meta">${date}${truth ? ' · vrai : ' + safeTruth : ''}</div>
+                <div class="dcap-case-actions">
+                  <button class="dcap-case-mini-btn" data-action="share" data-id="${c.id}">📤 Partager</button>
+                  <button class="dcap-case-mini-btn danger" data-action="delete" data-id="${c.id}">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+    overlay.innerHTML = `
+      <div class="dcap-modal">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="margin:0;">Cas capturés <span style="color:var(--ink-3);font-style:normal;font-weight:400;">(${cases.length})</span></h3>
+          <button id="dcap-list-close" style="background:var(--bg-warm);border:1px solid var(--line);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;">×</button>
+        </div>
+        <div style="max-height:55vh;overflow-y:auto;margin-bottom:14px;">
+          ${cardsHtml}
+        </div>
+        <div class="dcap-btn-row" style="margin-top:0;padding-top:14px;">
+          ${cases.length > 0 ? `
+            <button class="dcap-btn dcap-btn-secondary" id="dcap-clear-all">Tout effacer</button>
+            <button class="dcap-btn dcap-btn-primary" id="dcap-export-all">📤 Exporter tout</button>
+          ` : `
+            <button class="dcap-btn dcap-btn-secondary" id="dcap-list-close-2" style="flex:1;">Fermer</button>
+          `}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    overlay.querySelector('#dcap-list-close')?.addEventListener('click', close);
+    overlay.querySelector('#dcap-list-close-2')?.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    overlay.querySelector('#dcap-export-all')?.addEventListener('click', shareAllCases);
+    overlay.querySelector('#dcap-clear-all')?.addEventListener('click', () => {
+      if (clearAllCases()) { close(); showToast('Tous les cas supprimés'); }
+    });
+    overlay.querySelectorAll('[data-action="share"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const c = loadCases().find(x => x.id === btn.dataset.id);
+        if (c) shareCase(c);
+      });
+    });
+    overlay.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!confirm('Supprimer ce cas ?')) return;
+        deleteCase(btn.dataset.id);
+        close();
+        openCasesList();
+      });
+    });
+  }
+
+  function injectDebugButtons() {
+    const modal = document.getElementById('vision-debug-modal');
+    if (!modal) return;
+    const inner = modal.querySelector('div');
+    if (!inner) return;
+    if (inner.querySelector('.dcap-btn-row')) return;
+    injectStyles();
+    const row = document.createElement('div');
+    row.className = 'dcap-btn-row';
+    const nbCases = loadCases().length;
+    row.innerHTML = `
+      <button class="dcap-btn dcap-btn-secondary" id="dcap-show-list">📂 Mes cas (${nbCases})</button>
+      <button class="dcap-btn dcap-btn-primary" id="dcap-capture-this">📥 Capturer ce cas</button>
+    `;
+    inner.appendChild(row);
+    row.querySelector('#dcap-capture-this').addEventListener('click', () => {
+      if (typeof liveViewLastAnalysis === 'undefined' || !liveViewLastAnalysis) {
+        showToast('Pas d\'analyse à capturer');
+        return;
+      }
+      openCaptureForm(liveViewLastAnalysis);
+    });
+    row.querySelector('#dcap-show-list').addEventListener('click', openCasesList);
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.id === 'vision-debug-modal') {
+          setTimeout(injectDebugButtons, 0);
+        }
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true });
+
+  window.dcap = { list: loadCases, clear: clearAllCases, open: openCasesList, export: shareAllCases };
+  console.log('[dcap] Debug capture tool ready. Long-press "TU VOIS" → "Capturer ce cas".');
+})();
 </script>
 </body>
 </html>
