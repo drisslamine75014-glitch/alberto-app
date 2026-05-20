@@ -7438,7 +7438,7 @@ button.map-nav-overlay svg {
     </div>
 
     <!-- V93 : Badge version pour vérifier le déploiement -->
-    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v104</div>
+    <div style="position:absolute;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFF8EE;padding:3px 10px;border-radius:99px;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.08em;z-index:20;">v105</div>
 
     <!-- V82 : Bandeau résultat — mode compact par défaut, expand au tap -->
     <div class="live-view-result-v82" id="live-view-result">
@@ -15869,9 +15869,9 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
     try {
       const [addrResult, placesResult, wikiResult, osmResult] = await Promise.all([
         reverseGeocode(gps.lat, gps.lng, gps.accuracy),
-        fetchNearbyPlaces(gps.lat, gps.lng, 60),  // V104 : 60m au lieu de 40m
-        fetchWikiGeo(gps.lat, gps.lng, 300, 8),   // V104 : monuments dans 300m
-        fetchOsmFeatures(gps.lat, gps.lng, 200)   // V104 : patrimoine OSM 200m
+        fetchNearbyPlaces(gps.lat, gps.lng, 100),  // V105 : 100m
+        fetchWikiGeo(gps.lat, gps.lng, 500, 12),   // V105 : 500m, 12 articles
+        fetchOsmFeatures(gps.lat, gps.lng, 400)    // V105 : 400m
       ]);
       address = addrResult;
       nearbyPlaces = placesResult || [];
@@ -15950,83 +15950,151 @@ async function runClaudeVisionAnalysis(voyActive, etapeActive) {
   // Stocke pour usage ultérieur
   liveViewLastNearbyPlaces = nearbyPlaces;
 
-  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux et lettré de l'utilisateur. Tu vois en temps réel ce que voit l'utilisateur via la caméra de son téléphone, et tu disposes de TROIS sources de données fiables sur ce qui l'entoure :
-
-  1. 📜 MONUMENTS / SITES HISTORIQUES (Wikipedia) — pour patrimoine, statues, églises, palais
-  2. 🏛️ PATRIMOINE / TRANSPORTS / ÉQUIPEMENTS PUBLICS (OpenStreetMap) — pour gares, fontaines, bâtiments classés, parcs
-  3. 🏪 COMMERCES / RESTAURANTS (Google Places) — pour boutiques, restaurants, hôtels
+  const systemPrompt = `Tu es Alberto, le compagnon de voyage chaleureux et lettré de l'utilisateur. Tu vois en temps réel via la caméra de son téléphone. Tu disposes de plusieurs sources de données autour de lui, mais aussi de TA propre culture générale.
 
 ═══════════════════════════════════════════════════════
-MÉTHODE DE RAISONNEMENT OBLIGATOIRE — c'est ton moat contre ChatGPT
+TON RÔLE : ÊTRE UN DÉTECTIVE INTELLIGENT, PAS UN MENU
 ═══════════════════════════════════════════════════════
 
-ÉTAPE 1 — LIS le texte visible dans l'image (PRIORITÉ ABSOLUE)
-   • Enseignes, panneaux, plaques, noms écrits, marques visibles
-   • Cite-les exactement, c'est l'indice n°1
-
-ÉTAPE 2 — IDENTIFIE LA NATURE de ce qui est montré
-   • [MONUMENT/PATRIMOINE] : église, château, statue, ruines, fontaine, palais, place historique, mémorial
-   • [TRANSPORT/PUBLIC] : gare, métro, mairie, école, bibliothèque
-   • [NATURE/PAYSAGE] : plage, parc, sommet, point de vue, fleuve, plante, arbre
-   • [COMMERCE] : restaurant, boulangerie, café, boutique, hôtel
-   • [INTÉRIEUR PRIVÉ] : appartement, bureau, chambre
-   • [PLAT/OBJET] : assiette, plat, objet du quotidien
-
-ÉTAPE 3 — CROISE AVEC LA BONNE SOURCE
-   • Si MONUMENT/PATRIMOINE → cherche d'abord dans Wikipedia, puis OSM
-       → Donne le NOM HISTORIQUE + 1 fait marquant (date, événement, particularité)
-       → Le ton : guide érudit chaleureux, pas Wikipédia froid
-   • Si TRANSPORT/PUBLIC → cherche dans OSM
-       → "Gare d'Antony (RER B)" et non "Espace intérieur"
-   • Si COMMERCE → cherche dans Google Places
-       → Nom officiel + note ★ si > 4 + 1 fait
-   • Si NATURE → identifie l'espèce si tu peux (cerisier du Japon, olivier...), ou nomme le lieu naturel
-   • Si INTÉRIEUR PRIVÉ → ne cite AUCUNE liste, dis "intérieur privé"
-
-ÉTAPE 4 — SOIS PRÉCIS, PAS GÉNÉRIQUE
-   ❌ NE DIS JAMAIS : "Bâtiment ancien", "Pizzeria de quartier", "Espace intérieur", "Vitrine de commerce"
-   ✅ DIS TOUJOURS un NOM précis tiré des sources OU une description riche
+Les listes que tu reçois (Wikipedia, OSM, Google Places) sont des INDICES, pas des contraintes.
+Si tu reconnais clairement un monument/lieu/objet grâce à TA culture générale, mentionne-le même s'il n'est dans AUCUNE liste.
+Si les listes ne contiennent pas de bon candidat, NE FORCE PAS la réponse à un mauvais candidat.
 
 ═══════════════════════════════════════════════════════
-EXEMPLES OBLIGATOIRES À REPRODUIRE
+MÉTHODE DE RAISONNEMENT OBLIGATOIRE (chain of thought)
 ═══════════════════════════════════════════════════════
 
-✅ Image : église byzantine avec dôme
-   Wikipedia : "Église des Saints Apôtres (Kalamata) — Construite au XIIIe siècle, l'une des rares à avoir survécu au tremblement de terre de 1986."
-   → {"name": "Église des Saints Apôtres", "context": "XIIIe siècle, byzantine tardive — l'une des rares à avoir survécu au tremblement de terre de 1986."}
+Tu vas raisonner en 4 étapes EXPLICITES dans ton output JSON.
 
-✅ Image : statue d'un homme à cheval
-   OSM : "Statue de Theodoros Kolokotronis" + Wikipedia : "Héros de l'indépendance grecque (1770-1843)"
-   → {"name": "Statue de Theodoros Kolokotronis", "context": "Héros de l'indépendance grecque (1770-1843), né dans la région de Messénie."}
+ÉTAPE A — OBSERVATION FACTUELLE de l'image (champ "observation") :
+  - Quel type d'objet/lieu/scène est-ce ? (monument, commerce, intérieur, nature, etc.)
+  - Quel texte est visible ? (enseignes, panneaux, noms, marques)
+  - Quels détails distinctifs ? (style architectural, couleurs, époque, matériau)
+  - Sois précis et factuel (max 60 mots)
 
-✅ Image : hall de gare en pierre
-   OSM : "Gare d'Antony (RER B)"
-   → {"name": "Gare d'Antony (RER B)", "context": "Mise en service en 1854, c'est l'une des plus anciennes gares de banlieue parisienne."}
+ÉTAPE B — CANDIDATS COMPATIBLES (champ "candidates") :
+  Pour chaque source, identifie les candidats POTENTIELLEMENT compatibles avec ton observation.
+  Pour CHACUN, donne une note de confiance de 0 à 1 (1 = certain).
+  Format : [{name, source, confidence, why}]
+  
+  Sois rigoureux : si rien ne matche, c'est un tableau vide [].
+  Tu peux AUSSI ajouter un candidat "culture générale" si tu reconnais un lieu célèbre non listé.
 
-✅ Image : pizzeria avec 'FIVE PIZZA' visible
-   Google Places : "Five Pizza Original - Antony" 4.4★ 1331 avis, à 8m
-   → {"name": "Five Pizza Original - Antony", "context": "4.4★ avec 1331 avis — chaîne réputée pour ses pizzas au feu de bois avec un bon rapport qualité-prix."}
+ÉTAPE C — DÉCISION (champ "final_choice") :
+  - Si UN candidat dépasse 0.7 → c'est lui
+  - Si plusieurs candidats sont entre 0.5-0.7 → prends le plus probable, mentionne les autres en alternatives
+  - Si AUCUN ne dépasse 0.5 → décris factuellement sans inventer de nom précis
+  
+  Important : ta culture générale est une source AUSSI FIABLE qu'une liste, parfois plus.
 
-✅ Image : vieille bâtisse en pierre sans enseigne
-   Wikipedia (50m) : "Église Saint-Saturnin d'Antony — XVe-XVIIIe siècles, classée monument historique"
-   → {"name": "Église Saint-Saturnin d'Antony", "context": "XVe-XVIIIe siècles, classée monument historique. Le clocher carré est typique de l'Île-de-France."}
-
-✅ Image : cerisier en fleurs roses
-   → {"name": "Cerisier du Japon en fleurs", "context": "Prunus serrulata, son éclosion d'avril marque le hanami, la contemplation des fleurs au Japon."}
-
-✅ Image : intérieur de salon
-   → {"name": "Intérieur privé", "context": "Un coin convivial, on est plutôt chez quelqu'un que dans un commerce."}
+ÉTAPE D — RÉPONSE FINALE :
+  - name : nom du lieu (du candidat retenu, OU description factuelle si rien ne convient)
+  - context : 1 phrase chaleureuse érudite avec date/fait/anecdote (max 35 mots)
+  - confidence : 0.0 à 1.0 (ta certitude)
+  - alternatives : [{name, reason}] autres possibles si confidence < 0.85
 
 ═══════════════════════════════════════════════════════
-FORMAT DE RÉPONSE OBLIGATOIRE — JSON pur, RIEN d'autre, PAS de markdown
+FORMAT DE RÉPONSE — JSON pur, RIEN d'autre, PAS de markdown
 ═══════════════════════════════════════════════════════
 
 {
-  "name": "NOM précis (max 8 mots) — priorité aux noms des sources Wikipedia/OSM/Places",
-  "context": "1 phrase chaleureuse et érudite (max 35 mots) avec dates, faits, anecdotes locales si possible"
+  "observation": "ce que tu vois factuellement",
+  "candidates": [
+    {"name": "...", "source": "wikipedia|osm|places|culture", "confidence": 0.85, "why": "texte THÉÂTRE visible + nom culture connu"}
+  ],
+  "reasoning": "ton raisonnement de décision en 1-2 phrases",
+  "name": "Théâtre Firmin Gémier - La Piscine",
+  "context": "Scène nationale d'Antony, ouverte en 1971, célèbre pour sa programmation contemporaine.",
+  "confidence": 0.88,
+  "alternatives": [
+    {"name": "Hôtel de Ville d'Antony", "reason": "bâtiment voisin sur la même place"}
+  ]
 }
 
-Toujours en français. Ton chaleureux mais concis. Tu es un guide local cultivé.
+═══════════════════════════════════════════════════════
+EXEMPLES OBLIGATOIRES POUR CALIBRAGE
+═══════════════════════════════════════════════════════
+
+✅ Image : bâtiment moderne en verre avec "THÉÂTRE" écrit en grand
+   OSM : "Hôtel de Ville d'Antony" (50m, amenity=townhall)
+   Culture : Le Théâtre Firmin Gémier - La Piscine est sur la place d'Antony
+   → {
+     "observation": "Bâtiment moderne en verre et béton avec 'THÉÂTRE' clairement écrit en façade, devant une esplanade pavée.",
+     "candidates": [
+       {"name": "Théâtre Firmin Gémier", "source": "culture", "confidence": 0.92, "why": "Le mot THÉÂTRE est visible + je connais ce théâtre célèbre situé à Antony place de l'Hôtel-de-Ville"},
+       {"name": "Hôtel de Ville d'Antony", "source": "osm", "confidence": 0.15, "why": "OSM le donne dans la liste mais l'image montre clairement un théâtre, pas une mairie"}
+     ],
+     "reasoning": "L'enseigne THÉÂTRE est lisible et tranche sans ambiguïté. La culture confirme qu'il s'agit du Théâtre Firmin Gémier connu à Antony.",
+     "name": "Théâtre Firmin Gémier - La Piscine",
+     "context": "Scène nationale d'Antony, célèbre pour sa programmation contemporaine et son architecture moderne en verre.",
+     "confidence": 0.90,
+     "alternatives": [{"name": "Hôtel de Ville d'Antony", "reason": "voisin sur la même place"}]
+   }
+
+✅ Image : vieille église en pierre, pas de texte visible
+   Wikipedia : "Église Saint-Saturnin d'Antony — XVe-XVIIIe siècles, classée monument historique" (60m)
+   → {
+     "observation": "Église en pierre claire, clocher carré typique d'Île-de-France, architecture XVe-XVIIIe siècle.",
+     "candidates": [
+       {"name": "Église Saint-Saturnin d'Antony", "source": "wikipedia", "confidence": 0.85, "why": "Wikipedia décrit exactement ce type d'église à proximité immédiate, classée MH"}
+     ],
+     "reasoning": "Seule église dans la liste Wikipedia, à 60m, description correspondante.",
+     "name": "Église Saint-Saturnin d'Antony",
+     "context": "XVe-XVIIIe siècles, classée monument historique. Le clocher carré est typique de l'Île-de-France médiévale.",
+     "confidence": 0.85,
+     "alternatives": []
+   }
+
+✅ Image : cerisier en fleurs roses, parc
+   Aucune base ne le couvre
+   → {
+     "observation": "Arbre en pleine floraison, pétales roses pâles, branches retombantes — typique d'un cerisier ornemental.",
+     "candidates": [
+       {"name": "Cerisier du Japon (Prunus serrulata)", "source": "culture", "confidence": 0.80, "why": "Floraison rose pâle, branches retombantes, contexte de parc urbain — c'est l'espèce dominante en ornement en France"}
+     ],
+     "reasoning": "Aucune source ne cible la flore, mais l'identification visuelle est claire grâce à ma culture botanique.",
+     "name": "Cerisier du Japon en fleurs",
+     "context": "Prunus serrulata, son éclosion d'avril marque le hanami, la tradition japonaise de contemplation des fleurs.",
+     "confidence": 0.78,
+     "alternatives": [{"name": "Magnolia étoilé", "reason": "floraison rose similaire mais pétales plus larges"}]
+   }
+
+✅ Image : vitrine commerce "Five PIZZA" lisible
+   Places : "Five Pizza Original - Antony" 4.4★ 1331 avis (8m)
+   → {
+     "observation": "Devanture de restaurant fast-food avec l'enseigne 'Five PIZZA' visible en grand, vitrine éclairée.",
+     "candidates": [
+       {"name": "Five Pizza Original - Antony", "source": "places", "confidence": 0.97, "why": "Nom exact lu sur l'enseigne + match parfait Google Places à 8m, 1331 avis"}
+     ],
+     "reasoning": "Match évident : texte de l'enseigne identique au nom Google Places, distance 8m.",
+     "name": "Five Pizza Original - Antony",
+     "context": "Chaîne de pizzas au feu de bois, notée 4.4★ avec 1331 avis — bon rapport qualité-prix.",
+     "confidence": 0.97,
+     "alternatives": []
+   }
+
+✅ Image : bâtiment quelconque qu'on ne reconnaît pas, aucun texte
+   Aucune source ne donne de match satisfaisant
+   → {
+     "observation": "Bâtiment résidentiel en briques, style années 60-70, environ 5 étages, sans signalétique visible.",
+     "candidates": [],
+     "reasoning": "Aucun candidat satisfaisant ni dans les sources ni dans ma culture. Description factuelle uniquement.",
+     "name": "Immeuble résidentiel années 60-70",
+     "context": "Architecture typique de la reconstruction d'après-guerre, briques et fenêtres rectangulaires.",
+     "confidence": 0.35,
+     "alternatives": []
+   }
+
+═══════════════════════════════════════════════════════
+RÈGLES D'OR
+═══════════════════════════════════════════════════════
+
+1. JAMAIS forcer un mauvais candidat juste parce qu'il est dans une liste
+2. JAMAIS dire "Bâtiment ancien", "Pizzeria de quartier", "Espace intérieur" → toujours plus précis ou honnête
+3. Si le texte de l'image et la liste se contredisent → l'image gagne
+4. Toujours retourner les 4 champs : observation, candidates, reasoning, name+context+confidence+alternatives
+5. Toujours en français
+6. confidence est un FLOAT entre 0 et 1 (pas une chaîne)
 
 CONTEXTE DE L'UTILISATEUR :
 ${contextLines.join('\n')}`;
@@ -16049,7 +16117,7 @@ ${contextLines.join('\n')}`;
       headers: headers,
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 300,
+        max_tokens: 1500, // V105 : chain of thought nécessite plus de tokens
         system: systemPrompt,
         messages: [userMessage]
       })
@@ -16093,8 +16161,37 @@ ${contextLines.join('\n')}`;
 
     if (!liveViewActive) return;
 
-    // V82 : compose la meta pour le panneau détail (le compact a déjà l'adresse à part)
-    let metaHtml = parsed.context || '';
+    // V105 : compose le meta avec confidence + alternatives
+    const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : null;
+    const alternatives = Array.isArray(parsed.alternatives) ? parsed.alternatives : [];
+
+    // Construit le contexte affiché avec ton adaptatif selon confidence
+    let displayName = parsed.name || 'Scène';
+    let displayContext = parsed.context || '';
+
+    // Préfixe le nom selon le niveau de confiance
+    if (confidence !== null) {
+      if (confidence >= 0.85) {
+        // Affirmatif — pas de préfixe
+      } else if (confidence >= 0.5) {
+        // Nuancé
+        displayName = 'Vraisemblablement : ' + displayName;
+      } else {
+        // Honnête — juste description, pas de nom inventé
+        // (Claude doit déjà avoir donné une description factuelle)
+      }
+    }
+
+    // Compose la meta avec probabilité + alternatives + adresse
+    let metaHtml = displayContext;
+    if (confidence !== null) {
+      const pct = Math.round(confidence * 100);
+      const pctColor = pct >= 85 ? 'var(--olive-deep)' : (pct >= 50 ? 'var(--ink-3)' : '#9A6F3F');
+      metaHtml += `<br><span class="lv-confidence" style="color:${pctColor};font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.05em;">CONFIANCE ${pct}%</span>`;
+    }
+    if (alternatives.length > 0) {
+      metaHtml += `<br><span class="lv-alternatives" style="color:var(--ink-3);font-style:italic;font-size:12px;">ou peut-être : ${alternatives.slice(0, 2).map(a => a.name).join(', ')}</span>`;
+    }
     if (gpsError) {
       metaHtml += `<br><span class="lv-address-error">⚠️ ${gpsError}</span>`;
     } else if (address && address.short) {
@@ -16103,7 +16200,7 @@ ${contextLines.join('\n')}`;
 
     setLiveViewState({
       eyebrow: 'Tu vois',
-      title: parsed.name || 'Scène',
+      title: displayName,
       meta: metaHtml,
       address: address,
       searching: false,
@@ -16117,6 +16214,7 @@ ${contextLines.join('\n')}`;
       hideLiveViewMiniMap();
     }
 
+    // Stocke tout pour debug + souvenirs + chat contextuel
     liveViewLastAnalysis = { ...parsed, address, gps };
   } catch (err) {
     console.error('Vision analysis error:', err);
@@ -16418,6 +16516,89 @@ document.getElementById('lv-compact-retry-btn').addEventListener('click', (e) =>
   const { voyActive, etapeActive } = getActiveVoyageContext();
   runClaudeVisionAnalysis(voyActive, etapeActive);
 });
+
+// V105 : Long-press sur le compact → modale de debug (raisonnement Claude)
+let lvCompactPressTimer = null;
+const lvCompactEl = document.getElementById('lv-compact');
+if (lvCompactEl) {
+  const startLongPress = (e) => {
+    lvCompactPressTimer = setTimeout(() => {
+      lvCompactPressTimer = null;
+      if (navigator.vibrate) navigator.vibrate(30);
+      openVisionDebugModal();
+    }, 700);
+  };
+  const cancelLongPress = () => {
+    if (lvCompactPressTimer) {
+      clearTimeout(lvCompactPressTimer);
+      lvCompactPressTimer = null;
+    }
+  };
+  lvCompactEl.addEventListener('touchstart', startLongPress, { passive: true });
+  lvCompactEl.addEventListener('mousedown', startLongPress);
+  lvCompactEl.addEventListener('touchend', cancelLongPress);
+  lvCompactEl.addEventListener('touchmove', cancelLongPress);
+  lvCompactEl.addEventListener('mouseup', cancelLongPress);
+  lvCompactEl.addEventListener('mouseleave', cancelLongPress);
+}
+
+function openVisionDebugModal() {
+  if (!liveViewLastAnalysis) {
+    showToast('Pas d\'analyse à afficher');
+    return;
+  }
+  const a = liveViewLastAnalysis;
+  // Nettoyer existant
+  const oldModal = document.getElementById('vision-debug-modal');
+  if (oldModal) oldModal.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'vision-debug-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,20,16,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  const candidatesHtml = (a.candidates || []).map(c =>
+    `<div style="padding:8px 10px;background:rgba(199,125,60,0.1);border-left:3px solid var(--olive);border-radius:6px;margin-bottom:6px;font-family:'Outfit',sans-serif;font-size:13px;line-height:1.4;">
+      <strong>${escapeAttr(c.name || '')}</strong> <span style="color:var(--ink-3);font-size:11px;">${(c.source || '').toUpperCase()} · ${Math.round((c.confidence || 0) * 100)}%</span>
+      <div style="color:var(--ink-3);font-size:12px;margin-top:3px;">${escapeAttr(c.why || '')}</div>
+    </div>`
+  ).join('') || '<div style="color:var(--ink-3);font-style:italic;">Aucun candidat</div>';
+
+  const altsHtml = (a.alternatives || []).map(alt =>
+    `<div style="padding:6px 0;color:var(--ink-2);font-size:13px;"><strong>${escapeAttr(alt.name || '')}</strong> — ${escapeAttr(alt.reason || '')}</div>`
+  ).join('') || '<div style="color:var(--ink-3);font-style:italic;">Aucune</div>';
+
+  modal.innerHTML = `
+    <div style="background:var(--bg);border-radius:16px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:20px;font-family:'Outfit',sans-serif;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--ink);">Raisonnement Alberto</div>
+        <button id="vision-debug-close" style="background:var(--bg-warm);border:1px solid var(--line);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;">×</button>
+      </div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-3);margin-bottom:6px;font-weight:600;">Observation</div>
+      <div style="background:var(--bg-warm);padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:13.5px;line-height:1.5;color:var(--ink);">${escapeAttr(a.observation || '—')}</div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-3);margin-bottom:6px;font-weight:600;">Candidats étudiés</div>
+      <div style="margin-bottom:14px;">${candidatesHtml}</div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-3);margin-bottom:6px;font-weight:600;">Raisonnement</div>
+      <div style="background:var(--bg-warm);padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:13.5px;line-height:1.5;color:var(--ink);font-style:italic;">${escapeAttr(a.reasoning || '—')}</div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-3);margin-bottom:6px;font-weight:600;">Décision finale</div>
+      <div style="background:var(--olive-tint);padding:12px 14px;border-radius:8px;margin-bottom:14px;">
+        <div style="font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink);">${escapeAttr(a.name || '—')}</div>
+        <div style="font-size:12px;color:var(--olive-deep);margin-top:4px;font-weight:600;">Confiance : ${Math.round((a.confidence || 0) * 100)}%</div>
+        <div style="font-size:13px;color:var(--ink-2);margin-top:6px;">${escapeAttr(a.context || '')}</div>
+      </div>
+
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-3);margin-bottom:6px;font-weight:600;">Alternatives écartées</div>
+      <div>${altsHtml}</div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.getElementById('vision-debug-close').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
 
 // V82 : Tap sur le backdrop (caméra) → replie le panneau si déplié
 document.getElementById('lv-backdrop').addEventListener('click', () => {
