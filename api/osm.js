@@ -40,18 +40,25 @@ export default async function handler(req, res) {
     (
       node(around:${safeRadius},${lt},${lg})["historic"];
       way(around:${safeRadius},${lt},${lg})["historic"];
-      node(around:${safeRadius},${lt},${lg})["tourism"~"attraction|museum|artwork|viewpoint|gallery|monument"];
-      way(around:${safeRadius},${lt},${lg})["tourism"~"attraction|museum|artwork|viewpoint|gallery|monument"];
-      node(around:${safeRadius},${lt},${lg})["railway"~"station|halt|tram_stop"];
+      relation(around:${safeRadius},${lt},${lg})["historic"];
+      node(around:${safeRadius},${lt},${lg})["tourism"~"attraction|museum|artwork|viewpoint|gallery|monument|theme_park|zoo|aquarium"];
+      way(around:${safeRadius},${lt},${lg})["tourism"~"attraction|museum|artwork|viewpoint|gallery|monument|theme_park|zoo|aquarium"];
+      node(around:${safeRadius},${lt},${lg})["railway"~"station|halt|tram_stop|subway_entrance"];
       node(around:${safeRadius},${lt},${lg})["station"];
-      node(around:${safeRadius},${lt},${lg})["amenity"~"place_of_worship|fountain|townhall|library|university|theatre|arts_centre|community_centre"];
-      way(around:${safeRadius},${lt},${lg})["amenity"~"place_of_worship|fountain|townhall|library|university|theatre|arts_centre|community_centre"];
-      way(around:${safeRadius},${lt},${lg})["leisure"~"park|garden|nature_reserve"];
-      node(around:${safeRadius},${lt},${lg})["natural"~"peak|beach|spring|cave_entrance"];
-      way(around:${safeRadius},${lt},${lg})["natural"~"beach|water|wood"];
-      way(around:${safeRadius},${lt},${lg})["building"~"church|cathedral|chapel|castle|temple|mosque|synagogue|monastery"];
+      node(around:${safeRadius},${lt},${lg})["public_transport"="station"];
+      way(around:${safeRadius},${lt},${lg})["public_transport"="station"];
+      node(around:${safeRadius},${lt},${lg})["amenity"~"place_of_worship|fountain|townhall|library|university|college|school|theatre|cinema|arts_centre|community_centre|nightclub|conference_centre|exhibition_centre|courthouse|post_office|police|fire_station|hospital|clinic|marketplace|prison|bus_station|ferry_terminal"];
+      way(around:${safeRadius},${lt},${lg})["amenity"~"place_of_worship|fountain|townhall|library|university|college|school|theatre|cinema|arts_centre|community_centre|nightclub|conference_centre|exhibition_centre|courthouse|post_office|police|fire_station|hospital|clinic|marketplace|prison|bus_station|ferry_terminal"];
+      way(around:${safeRadius},${lt},${lg})["leisure"~"park|garden|nature_reserve|stadium|sports_centre|swimming_pool|playground|water_park|marina"];
+      node(around:${safeRadius},${lt},${lg})["natural"~"peak|beach|spring|cave_entrance|tree|rock"];
+      way(around:${safeRadius},${lt},${lg})["natural"~"beach|water|wood|coastline|cliff|wetland"];
+      way(around:${safeRadius},${lt},${lg})["building"~"church|cathedral|chapel|castle|temple|mosque|synagogue|monastery|tower|public|cinema|theatre|university|hospital|train_station|stadium|government|civic|kindergarten|school|college"];
+      way(around:${safeRadius},${lt},${lg})["man_made"~"tower|bridge|pier|lighthouse|water_tower|windmill|chimney|obelisk"];
+      node(around:${safeRadius},${lt},${lg})["man_made"~"tower|lighthouse|obelisk|chimney|windmill"];
+      node(around:${safeRadius},${lt},${lg})["bridge"="yes"];
+      way(around:${safeRadius},${lt},${lg})["bridge"="yes"];
     );
-    out center tags 50;
+    out center tags 80;
   `;
 
   let data = null;
